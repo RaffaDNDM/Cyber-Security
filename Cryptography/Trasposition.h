@@ -19,4 +19,3 @@ void path_cypher_encoding(const char* text, const int mode);
 void path_cypher_decoding(const char* text, const int mode);
 
 #endif
-

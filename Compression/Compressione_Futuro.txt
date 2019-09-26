@@ -1,0 +1,13 @@
+Codifiche a riduzione locale di entropia
+1. Decodifica di Huffman
+2. Codifica aritmetica
+3. Decodifica aritmetica
+
+Codifica a dizionario
+1. Deflate
+2. LZ77 (LZ78 forse)
+3. LZW
+4. LZMA
+5. Trasformata di Burrows-Wheeler
+
+Compressione frattale
