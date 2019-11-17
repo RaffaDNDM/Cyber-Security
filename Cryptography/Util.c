@@ -1,6 +1,7 @@
 #include "Util.h"
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 /**
     @param num number for which we want to know if it is an integer number
     @return 0 if num is not an integer power of a number
@@ -78,7 +79,7 @@ int mod_pow(int a, int d, int num);
 int is_int_power(int num)
 {
     int i=2;
-    int length_num = sizeof(int)*8;
+    int length_num = ceil(log(num)/log(2));
     int is_no_power = 1;
     int m = 2;
 
@@ -118,7 +119,36 @@ int is_int_power(int num)
 
 int find_r(int num)
 {
-    return 0;
+    double lg_num= log(num)/log(2); //lg2_num
+    int max_r = ceil(pow(lg_num, 5));
+    int max_exp = floor(pow(lg_num, 2));
+    int r=2;
+
+    for(; r<=max_r; r++)
+    {
+        int d = ea(num,r);
+
+        if(d==1)
+        {
+            int i=2;
+            int flag = 1; // represents n^i mod r != 1
+
+            while(i<=max_exp && flag)
+            {
+                if(mod_pow(num, i, r)==1)
+                {
+                    flag = 0;
+                }
+
+                i++;
+            }
+
+            if(i==max_exp+1)
+            {
+                return r;
+            }
+        }
+    }
 }
 
 int ea(int n, int m)
@@ -271,7 +301,10 @@ int miller_rabin_T(int num, int T)
 
 int miller_rabin(int num)
 {
-    return 0;
+    int length_num = ceil(log(num)/log(2));
+    int num_a = ceil(pow(length_num, 4));
+
+    miller_rabin_T(num, num_a);
 }
 
 int mod_pow(int a, int d, int num)
