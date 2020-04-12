@@ -1,0 +1,5 @@
+./fd 4660
+
+#After the creation of the channel on stdin fd[0]
+#you can type the "key"
+LETMEWIN
