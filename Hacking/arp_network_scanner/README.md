@@ -12,4 +12,4 @@ To check which parameters you can insert, you can type the command:
 sudo python3 arp_network_scanner.py --help 
 ```
 An example of output of the command is shown in the following image:
-![output](https://drive.google.com/file/d/12TVc664KpmF83CBXX-LlXr5GEJmEYsvz/view?usp=sharing)
+![output](output.png)
