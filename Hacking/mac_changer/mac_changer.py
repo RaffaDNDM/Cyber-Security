@@ -51,15 +51,18 @@ def main():
        interface, mac = args_parser()
     except NoMACSpecified:
         print("You need to specify a MAC address")
+        exit(0)
     except NoInterfaceSpecified:
         print("You need to specify an interface name")
-    
+        exit(0)
+
     #Old MAC address
     try:
         cprint("Old MAC address:", "blue", "on_green", end='')
         cprint(" {}".format(current_MAC(interface)), "cyan", attrs=["bold",])
     except NoMACSpecified:
         print("No OLD MAC address found")
+        exit(0)
 
     #Changing MAC address
     MAC_change(interface, mac)
@@ -70,6 +73,7 @@ def main():
         cprint(f" {current_MAC(interface)}", "yellow", attrs=["bold",])
     except NoMACSpecified:
         print("No OLD MAC address found")
+        exit(0)
 
 if __name__=='__main__':
     main()
