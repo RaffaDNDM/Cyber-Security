@@ -10,6 +10,7 @@ from termcolor import cprint
 import argparse
 from sys import exit, getsizeof
 import struct
+import socket
 
 BROADCAST_MAC = 'ff:ff:ff:ff:ff:ff'
 IP_MASK = 0x80000000

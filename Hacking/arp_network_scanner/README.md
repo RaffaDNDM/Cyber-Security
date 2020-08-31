@@ -1,7 +1,7 @@
 # ARP Network Scanner
-To use this network scanner, you need to install scapy module for python3, through this command:
+To use this network scanner, you need to install the following modules for python3, through this command:
 ```bash
-pip3 install scapy
+pip3 install scapy termcolor argparse
 ```
 To run the program, you need to type for example this command on bash:
 ```bash
