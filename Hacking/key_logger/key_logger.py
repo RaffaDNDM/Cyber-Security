@@ -10,12 +10,12 @@ def exit_manage(signum, stack):
 
 signal.signal(signal.SIGUSR1, exit_manage)
 
+
 def get_key(key):
     if isinstance(key, keyboard.KeyCode):
         return key.char
     else:
         return str(key)
-
 
 
 def press(key):
