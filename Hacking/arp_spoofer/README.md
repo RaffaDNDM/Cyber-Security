@@ -16,3 +16,5 @@ To check which parameters you can insert, you can type the command:
 ```bash
 sudo python3 arp_spoofer.py --help 
 ```
+An example of output of the command is shown in the following image:
+![output](output.png)

