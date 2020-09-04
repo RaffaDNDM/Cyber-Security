@@ -1,9 +1,12 @@
-from termcolor import colored
 from struct import pack
 from struct import unpack
 import sys
 import socket
 import os
+import argparse
+from termcolor import cprint
+import subprocess
+import csv 
 
 #! Network Byte Order = Big Endian Order
 ETH_FORMAT = '! 6s 6s H'
@@ -17,8 +20,15 @@ TCP_NUM = 6
 UDP_NUM = 17
 
 ICMP_TYPE_FILE = "icmp-parameters-types.csv"
+LINE = '____________________________________________'
+
+COLOR_L2 = 'red'
+COLOR_L3 = 'green'
+COLOR_L4 = 'blue'
 
 network_types = {ICMP_NUM:'ICMP header', TCP_NUM:'TCP header', UDP_NUM:'UDP header'}
+
+
 
 def get_MAC(addr):
     '''
@@ -28,6 +38,8 @@ def get_MAC(addr):
     '''
     return ':'.join(map(str, addr))
 
+
+
 def get_IP(addr):
     '''
     IP address with dot format from array of char numbers
@@ -36,17 +48,29 @@ def get_IP(addr):
     '''
     return '.'.join(map(str, addr))
 
-def eth_pkt(raw_data):
+
+
+def eth_pkt(raw_data, verbose):
     dst, src, protocol_type = unpack(ETH_FORMAT, raw_data[:14])
     src_MAC = get_MAC(src)
     dst_MAC = get_MAC(dst)
     data = raw_data[14:]
-    
+            
+    if verbose:
+        cprint('\n\nEthernet header\n'+LINE, COLOR_L2, attrs=['bold',])
+        cprint('Src MAC:   ', COLOR_L2, end='')
+        print(src_MAC)
+        cprint('Dst MAC:   ', COLOR_L2, end='')
+        print(dst_MAC)
+        cprint('Protocol:  ', COLOR_L2, end='')
+        print(hex(protocol_type))
+
     return src_MAC, dst_MAC, protocol_type, data
 
 
-def arp_pkt(raw_data):
-    hw_protocol, lv3_protocol, hw_len, lv3_len, op_code, src_hw_addr, src_lv3_addr, dst_hw_addr, dst_lv3_addr = unpack('! H H B B H 6s L 6s L', raw_data[:28])
+
+def arp_pkt(raw_data, verbose):
+    hw_protocol, lv3_protocol, hw_len, lv3_len, op_code, src_hw_addr, src_lv3_addr, dst_hw_addr, dst_lv3_addr = unpack('! H H B B H 6s 4s 6s 4s', raw_data[:28])
     
     #Source address
     src_MAC = get_MAC(src_hw_addr)
@@ -56,13 +80,36 @@ def arp_pkt(raw_data):
     src_IP = get_IP(src_lv3_addr)
     #Destination address
     dst_IP = get_IP(dst_lv3_addr)
-    #Type of operation performed by packet
+    #Type of operation performed by packet (Useless for only reception)
     op = 'Request' if op_code==1 else 'Reply'
-    
+
+
+    if verbose:
+        cprint('\nARP header\n'+LINE, COLOR_L3, attrs=['bold',])
+        cprint('HW Protocol:   ', COLOR_L3, end='')
+        print(hw_protocol)
+        cprint('L3 Protocol:   ', COLOR_L3, end='')
+        print(lv3_protocol)
+        cprint('HW Length:   ', COLOR_L3, end='')
+        print(hw_len)
+        cprint('L3 Length:   ', COLOR_L3, end='')
+        print(lv3_len)
+        cprint('OP code:   ', COLOR_L3, end='')
+        print(op + ' ('+str(op_code)+')')
+        cprint('Src MAC:   ', COLOR_L3, end='')
+        print(src_MAC)
+        cprint('Src IP:  ', COLOR_L3, end='')
+        print(src_IP)
+        cprint('Dst MAC:   ', COLOR_L3, end='')
+        print(dst_MAC)
+        cprint('Dst IP:  ', COLOR_L3, end='')
+        print(dst_IP, end='\n\n')
+
     return op, src_MAC, dst_MAC, src_IP, dst_IP
 
 
-def ipv4_pkt(raw_data):
+
+def ipv4_pkt(raw_data, verbose):
     #! Network Byte Order = Big Endian Order
     vhl = raw_data[0]
     #Version of IP protocol
@@ -74,26 +121,59 @@ def ipv4_pkt(raw_data):
     tos, total_length, id_pkt, flag_frag, ttl, protocol, checksum, src, dst = unpack('! x B H H H B B H 4s 4s', raw_data[:header_len])
     
     #Source address
-    src_IP = get_MAC(src)
+    src_IP = get_IP(src)
     #Destination address
-    dst_IP = get_MAC(dst)
+    dst_IP = get_IP(dst)
     #Payload of IP packet
     data = raw_data[header_len:]
+    
+    if verbose:
+        cprint('\nIP header\n'+LINE, COLOR_L3, attrs=['bold',])
+        cprint('Version:   ', COLOR_L3, end='')
+        print(version)
+        cprint('Header length:   ', COLOR_L3, end='')
+        print(header_len)
+        cprint('Type of service:   ', COLOR_L3, end='')
+        print(tos)
+        cprint('Total Length:   ', COLOR_L3, end='')
+        print(total_length)
+        cprint('ID:   ', COLOR_L3, end='')
+        print(id_pkt)
+        cprint('Flags Fragment:   ', COLOR_L3, end='')
+        print(flag_frag)
+        cprint('Upper Layer Protocol:   ', COLOR_L3, end='')
+        print(protocol)
+        cprint('Checksum:  ', COLOR_L3, end='')
+        print(checksum)
+        cprint('Src IP:   ', COLOR_L3, end='')
+        print(src_IP)
+        cprint('Dst IP:  ', COLOR_L3, end='')
+        print(dst_IP)
     
     return version, header_len, ttl, protocol, src_IP, dst_IP, data
 
 
-def icmp_pkt(raw_data):
+
+def icmp_pkt(raw_data, verbose):
+    type_list = ''
+    
     with open(ICMP_TYPE_FILE, 'r') as f:
-        lines = f.readLines()
+        rows = csv.reader(f, delimiter=',')
 
-    code_type = lines[raw_data[0]]
-    type_list = code_type.split(',',1)
+        for row in rows:
+            if(int(row[0])==int(raw_data[0])):
+                type_list = row[1]
 
+    if verbose:
+        cprint('\nICMP header\n'+LINE, COLOR_L4, attrs=['bold',])
+        cprint('Type:   ', COLOR_L4, end='')
+        print(str(raw_data[0])+' ('+type_list+')', end='\n\n')
+    
     return type_list[1]
 
 
-def tcp_pkt(raw_data):
+
+def tcp_pkt(raw_data, verbose):
     src_port, dst_port, seq, ack, off_res_flags = unpack(TCP_FORMAT, raw_data[:14])
     
     #Offset = number of words of 4 bytes
@@ -106,46 +186,152 @@ def tcp_pkt(raw_data):
     fin = off_res_flags & 1
     data = raw_data[offset:]
 
+    if verbose:
+        cprint('\nTCP header\n'+LINE, COLOR_L4, attrs=['bold',])
+        cprint('Src Port:   ', COLOR_L4, end='')
+        print(src_port)
+        cprint('Dst Port:   ', COLOR_L4, end='')
+        print(dst_port)
+        cprint('Sequence Number:   ', COLOR_L4, end='')
+        print(seq)
+        cprint('ACK Number:   ', COLOR_L4, end='')
+        print(ack)
+        cprint('Offset Reserved Flags:   ', COLOR_L4, end='')
+        print(off_res_flags, end='\n\n')
+    
     return src_port, dst_port, seq, ack, urg, ack, psh, rst, syn, fin, data
 
-def udp_pkt(raw_data):
+
+
+def udp_pkt(raw_data, verbose):
     src_port, dst_port, udp_len, checksum = unpack(UDP_FORMAT, raw_data[:8])
+    
+    if verbose:
+        cprint('\nUDP header\n'+LINE, COLOR_L4, attrs=['bold',])
+        cprint('Src Port:   ', COLOR_L4, end='')
+        print(src_port)
+        cprint('Dst Port:   ', COLOR_L4, end='')
+        print(dst_port)
+        cprint('Length:   ', COLOR_L4, end='')
+        print(udp_len)
+        cprint('Checksum:   ', COLOR_L4, end='')
+        print(checksum, end='\n\n')
+    
     return src_port, dst_port, udp_len, checksum
 
-def main():
-    sd = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(3))
-    print(sys.argv)
-    sd.bind((sys.argv[1], 0))
+
+
+def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num):
+            
+    cprint('\n\nInterface:   ', 'yellow', attrs=['bold',], end='')
+    print(f'{interface}')
     
+    cprint(LINE+'\nDLL LAYER PACKETS (layer 2)\n'+LINE, COLOR_L2, attrs=['bold',])
+    cprint('Ethernet: ', COLOR_L2)
+    print(f'{eth_num}')
+    cprint(LINE, COLOR_L2, attrs=['bold',], end='\n\n')
+    cprint(LINE+'\nNETWORK PACKETS (layer 3)\n'+LINE, COLOR_L3, attrs=['bold',])
+    cprint('IP:  ', COLOR_L3)
+    print(f'{ip_num}')
+    cprint('ARP: ', COLOR_L3)
+    print(f'{arp_num}')
+    cprint('Other: ', COLOR_L3)
+    print(f'{unkown_net_num}')
+    cprint(LINE, COLOR_L3, attrs=['bold',], end='\n\n')
+    cprint(LINE+'\nTRANSPORT/CONTROL PACKETS (layer 4)\n'+LINE, COLOR_L4, attrs=['bold',])
+    cprint('ICMP:  ', COLOR_L4)
+    print(f'{icmp_num}')
+    cprint('TCP: ', COLOR_L4)
+    print(f'{tcp_num}')
+    cprint('UDP: ', COLOR_L4)
+    print(f'{udp_num}')
+    cprint('Other: ', COLOR_L4)
+    print(f'{unkown_transport_num}')
+    cprint(LINE, COLOR_L4, attrs=['bold',], end='\n\n')
+
+
+
+def args_parser():
+    #Parser of command line arguments
+    parser = argparse.ArgumentParser()
+    #Initialization of needed arguments
+    parser.add_argument("-interface", "-if", dest="interface", help="Interface on which we apply packet sniffing")
+    parser.add_argument("-verbose", "-v", dest="verbose", help="Specification of packets content", action='store_true')
+
+    #Parse command line arguments
+    args = parser.parse_args()
+    
+    #Check if the arguments have been specified on command line
+    if not args.interface:
+        parser.print_help()
+        exit(0)
+    
+    return args.interface, args.verbose
+
+
+
+def main():
+    ETH_P_ALL = 3
+    sd = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_ALL))
+    interface, verbose = args_parser()
+    sd.bind((interface, 0))
+    eth_num = 0
+    arp_num = 0
+    ip_num = 0
+    unkown_net_num = 0
+    udp_num = 0
+    tcp_num = 0
+    icmp_num = 0
+    unkown_transport_num = 0
+
+
     if os.name == 'nt':
         sd.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 
-    while True:
-        raw_data, addr = sd.recv(65535)
+    try:
+        while True: 
+            raw_data = sd.recv(1518)
+            src_MAC, dst_MAC, network_protocol, payload_DLL = eth_pkt(raw_data, verbose)
+            eth_num+=1
 
-        src_MAC, dst_MAC, network_protocol, payload_DLL = eth_pkt(raw_data)
-        print(colored('Ethernet header', 'red'))
+            if(network_protocol==0x0800): #IP packets
+                ip_num+=1
+                version, header_len, ttl, protocol, src_IP, dst_IP, payload_IP = ipv4_pkt(payload_DLL, verbose)
+                unkown_protocol = False
 
-        if(network_protocol==0x0800):
-            print(colored('IP header', 'green'))
-            version, header_len, ttl, protocol, src_IP, dst_IP, payload_IP = ipv4_pkt(payload_DLL)
+                if(protocol==ICMP_NUM): #ICMP packets
+                    icmp_num+=1
+                    icmp_type = icmp_pkt(payload_IP, verbose)
+                elif(protocol==TCP_NUM): #TCP packets
+                    tcp_num+=1
+                    src_port, dst_port, seq, ack, urg, ack, psh, rst, syn, fin, data = tcp_pkt(payload_IP, verbose)
+                elif(protocol==UDP_NUM): #UDP packets
+                    udp_num+=1
+                    src_port, dst_port, udp_len, checksum = udp_pkt(payload_IP, verbose)
+                else:
+                    unkown_transport_num+=1
+                    unkown_protocol = True
 
-            if(protocol==ICMP_NUM): #ICMP
-                icmp_type = icmp_pkt(payload_IP)
-                print(colored(network_types[protocol]), 'blue')
-            elif(protocol==TCP_NUM): #TCP
-                src_port, dst_port, seq, ack, urg, ack, psh, rst, syn, fin, data = tcp_pkt(payload_IP)
-                print(colored(network_types[protocol]), 'blue')
-            elif(protocol==UDP_NUM): #UDP
-                src_port, dst_port, udp_len, checksum = udp_pkt(payload_IP)
-                print(colored(network_types[protocol]), 'blue')
+                if verbose:
+                    if unkown_protocol:
+                        cprint('Unkown Transport Protocol', COLOR_L4)
+
+            elif(network_protocol==0x0806):
+                arp_num+=1
+                op, src_MAC, dst_MAC, src_IP, dst_IP = arp_pkt(payload_DLL, verbose)
             else:
-                print('Network protocol unknown', 'blue')
+                unkown_net_num+=1
+                if verbose:
+                    cprint('Unkown Network Protocol', COLOR_L3)
 
-        elif(network_protocol==0x0806):
-            print(colored('ARP header', 'green'))
-            op, src_MAC, dst_MAC, src_IP, dst_IP = arp_pkt(payload_DLL)
 
+            if not verbose:
+                subprocess.call('cls' if os.name=='nt' else 'clear')
+                print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num) 
+    
+    except KeyboardInterrupt:
+        sd.close()
+    
 
 if __name__=='__main__':
     main()
