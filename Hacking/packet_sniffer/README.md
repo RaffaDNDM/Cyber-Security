@@ -30,7 +30,7 @@ This command will display only the number of sniffed packets w.r.t the type of t
 If you add the option <i>-verbose</i>, you can obtain a different behaviour of the program:
 <pre lang="bash"><code> sudo python3 pkt_sniffer.py -if eth0 -verbose </code></pre>
 This command will display all fields of each sniffed packet. An example of output of the command is shown in the following image:<br>
-<img src="scapy_output_verbose.png" width="100" alt="scapy_output_verbose"><br>
+<img src="scapy_output_verbose.png" width="300" alt="scapy_output_verbose"><br>
 To check which parameters you can insert, you can type the command:
 <pre lang="bash"><code> sudo python3 pkt_sniffer.py --help  </code></pre>
 </details>
