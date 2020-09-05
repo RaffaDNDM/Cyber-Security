@@ -24,13 +24,13 @@ The packet sniffer scapy_pkt_sniffer.py is implemented using only socket module 
 To use this Packet Sniffer, you need to install the following modules for python3, through this command:
 <pre lang="bash"><code> pip3 install termcolor argparse </code></pre>
 To run the program, you can type for example this command on bash:
-<pre lang="bash"><code> sudo python3 pkt_sniffer.py -if eth0 </code></pre>
+<pre lang="bash"><code> sudo python3 scapy_pkt_sniffer.py -if eth0 </code></pre>
 This command will display only the number of sniffed packets w.r.t the type of the headers. An example of output of the command is shown in the following image:<br>
 <img src="scapy_output.png" width="300" alt="scapy_output"><br>
 If you add the option <i>-verbose</i>, you can obtain a different behaviour of the program:
-<pre lang="bash"><code> sudo python3 pkt_sniffer.py -if eth0 -verbose </code></pre>
+<pre lang="bash"><code> sudo python3 scapy_pkt_sniffer.py -if eth0 -verbose </code></pre>
 This command will display all fields of each sniffed packet. An example of output of the command is shown in the following image:<br>
 <img src="scapy_output_verbose.png" width="300" alt="scapy_output_verbose"><br>
 To check which parameters you can insert, you can type the command:
-<pre lang="bash"><code> sudo python3 pkt_sniffer.py --help  </code></pre>
+<pre lang="bash"><code> sudo python3 scapy_pkt_sniffer.py --help  </code></pre>
 </details>

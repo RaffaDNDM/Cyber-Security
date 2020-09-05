@@ -1,7 +1,6 @@
 from termcolor import cprint
 import subprocess
 from scapy.layers.l2 import sniff, ARP
-#pip3 install scapy-http
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 import argparse
 import os
@@ -104,9 +103,12 @@ def analyze_pkt(packet):
 
 def main():
     args_parser()
-    #No store of the packet but analyzing on fly
-    sniff(iface=INTERFACE, store=False, prn=analyze_pkt)
 
+    try:
+        #No store of the packet but analyzing on fly
+        sniff(iface=INTERFACE, store=False, prn=analyze_pkt)
+    except KeyboardInterrupt:
+        print('', end='\n\n')
 
 
 if __name__=='__main__':
