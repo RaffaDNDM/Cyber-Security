@@ -223,6 +223,7 @@ def udp_pkt(raw_data, verbose):
 
 def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num):
             
+    subprocess.call('cls' if os.name=='nt' else 'clear')
     cprint('\n\nInterface:   ', 'yellow', attrs=['bold',], end='')
     print(f'{interface}')
     
@@ -326,7 +327,6 @@ def main():
 
 
             if not verbose:
-                subprocess.call('cls' if os.name=='nt' else 'clear')
                 print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num) 
     
     except KeyboardInterrupt:
