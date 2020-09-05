@@ -17,7 +17,7 @@ If you add the option <i>-verbose</i>, you can obtain a different behaviour of t
 This command will display all fields of each sniffed packet. An example of output of the command is shown in the following image:<br>
 <img src="output_verbose.png" width="300" alt="output_verbose"><br>
 To check which parameters you can insert, you can type the command:
-<pre lang="bash"><code> sudo python3 arp_spoofer.py --help </code></pre>
+<pre lang="bash"><code> sudo python3 pkt_sniffer.py --help </code></pre>
 </details>
 <details> <summary> <b><i>Packet sniffer using scapy module</i></b> </summary> 
 The packet sniffer scapy_pkt_sniffer.py is implemented using only socket module and looking to Layer 2 primitives.
@@ -32,5 +32,5 @@ If you add the option <i>-verbose</i>, you can obtain a different behaviour of t
 This command will display all fields of each sniffed packet. An example of output of the command is shown in the following image:<br>
 <img src="scapy_output_verbose.png" width="100" alt="scapy_output_verbose"><br>
 To check which parameters you can insert, you can type the command:
-<pre lang="bash"><code> sudo python3 arp_spoofer.py --help  </code></pre>
+<pre lang="bash"><code> sudo python3 pkt_sniffer.py --help  </code></pre>
 </details>
