@@ -1,4 +1,4 @@
-# Sniffer of HTTP password
+# Sniffer of HTTP passwords
 The program is an HTTP is Packet Sniffer that analyzes the possible HTTP POST request. In HTTP, original and not secure version of this protocol, the credentials are posted through the use of POST method.
 ```bash
 echo 1 > /proc/sys/net/ipv4/ip_forward 
