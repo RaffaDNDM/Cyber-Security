@@ -100,7 +100,7 @@ def main():
             time.sleep(2)
     except KeyboardInterrupt:
         print("\n\n[Detected CTRL+C] Closing the program...", end='\n\n')
-        restore(target_IP, target_MAC, gateway_IP, gateway_MAC)
+        reset_arp_tables(target_IP, target_MAC, gateway_IP, gateway_MAC)
 
 if __name__=="__main__":
     main()
