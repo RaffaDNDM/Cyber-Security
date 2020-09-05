@@ -12,9 +12,9 @@ To run the program, you need to type for example this command on bash:
 ```bash
 sudo python3 arp_spoofer.py -t 10.0.2.7 -g 10.0.0.1
 ```
+An example of output of the command is shown in the following image:
+![output](output.png)
 To check which parameters you can insert, you can type the command:
 ```bash
 sudo python3 arp_spoofer.py --help 
 ```
-An example of output of the command is shown in the following image:
-![output](output.png)
