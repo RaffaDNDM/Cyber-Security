@@ -2,6 +2,7 @@ from scapy.layers.l2 import ARP, Ether, srp, send
 from termcolor import cprint
 import argparse
 import time
+import os
 
 class NoTargetSpecified(Exception):
     pass
@@ -79,6 +80,8 @@ def args_parser():
 
 
 def main():
+    os.system('echo 1 > /proc/sys/net/ipv4/ip_forward')
+
     #To establish MIDM connection, we need to repeat the update of ARP 
     #table for victim and gateway otherwise it is automatic reset
     target_IP, gateway_IP = args_parser()

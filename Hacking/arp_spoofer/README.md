@@ -4,17 +4,19 @@ By default the machine doesn't work only forwarding the packets and to do it we 
 ```bash
 echo 1 > /proc/sys/net/ipv4/ip_forward 
 ```
+In the last version of the program this command is called by program itself.<br>
 To use this ARP spoofer, you need to install the following modules for python3, through this command:
 ```bash
 pip3 install scapy termcolor argparse
 ```
 To run the program, you need to type for example this command on bash:
 ```bash
-sudo python3 arp_spoofer.py -t 10.0.2.7 -g 10.0.0.1
+python3 arp_spoofer.py -t 10.0.2.7 -g 10.0.0.1
 ```
 An example of output of the command is shown in the following image:<br>
 <img src="output.png" width="650" alt="output"><br>
-To check which parameters you can insert, you can type the command:
+The same results can be obatained by using <code>arpspoof -t 10.0.2.6 10.0.2.1</code> linux command. To check which parameters you can insert, you can type the command:
 ```bash
-sudo python3 arp_spoofer.py --help 
+python3 arp_spoofer.py --help 
 ```
+The program must run with superuser privileges.
