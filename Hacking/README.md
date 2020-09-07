@@ -7,6 +7,12 @@ This program is used to detect the MAC address of all the network to which we ar
 <summary><i><b>ARP Spoofer</b></i></summary>
 This program uses the vulnerability of ARP to create a MIDM connection.
 </details>
+<summary><i><b>DNS Spoofer</b></i></summary>
+</details>
+<details>
+<summary><i><b>IP proxy</b></i></summary>
+This program detect IP packets and drop or accept all of them.
+</details>
 <details>
 <summary><i><b>Key Logger</b></i></summary>
 This program works in background detecting the keys presses by the user.
