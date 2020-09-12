@@ -6,7 +6,6 @@ from scapy.layers.inet import IP
 
 DROP = False
 VERBOSE = False
-NUM_PKTS = 0
 
 def process_packet(packet):
     global DROP, VERBOSE, NUM_PKTS
@@ -62,8 +61,7 @@ def main():
         queue.run()
     except KeyboardInterrupt:
         queue.unbind()
-        cprint('\nPackets detected: ','yellow', attrs=['bold',], end='')
-        print(f'{NUM_PKTS}\nFlushing ip table.', end='\n\n')
+        print('Flushing ip table.', end='\n\n')
         os.system('iptables -F')
 
 if __name__=='__main__':
