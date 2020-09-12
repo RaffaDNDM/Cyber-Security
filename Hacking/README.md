@@ -7,7 +7,8 @@ This program is used to detect the MAC address of all the network to which we ar
 <summary><i><b>ARP Spoofer</b></i></summary>
 This program uses the vulnerability of ARP to create a MIDM connection.
 </details>
-<summary><i><b>DNS Spoofer</b></i></summary>
+<details><summary><i><b>DNS Spoofer</b></i></summary>
+Intercept DNS response and modify record for some specified target domain.
 </details>
 <details>
 <summary><i><b>IP proxy</b></i></summary>
