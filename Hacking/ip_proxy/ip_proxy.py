@@ -2,13 +2,21 @@ import netfilterqueue
 import os
 import argparse
 from termcolor import cprint
+from scapy.layers.inet import IP
 
 DROP = False
+VERBOSE = False
 NUM_PKTS = 0
 
 def process_packet(packet):
-    global DROP, NUM_PKTS
-    print(packet)
+    global DROP, VERBOSE, NUM_PKTS
+    
+    if VERBOSE:
+        IP_pkt = IP(packet.get_payload())
+        print(IP_pkt.show())
+    else:
+        print(packet)
+
     NUM_PKTS+=1
     if DROP:
         packet.drop()
@@ -16,24 +24,35 @@ def process_packet(packet):
         packet.accept()
 
 def args_parser():
-    global DROP
+    global DROP, VERBOSE
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
     #Initialization of needed arguments
     parser.add_argument("-drop", "-d", dest="drop", help="If specified, it drops all packets otherwise accept them", action='store_true')
+    parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
+    parser.add_argument("-verbose", "-v", dest="verbose", help="If specified, print all the fields of IP packet", action='store_true')
 
     #Parse command line arguments
     args = parser.parse_args()
-    
+
     #Check if the arguments have been specified on command line
     DROP = args.drop
+    VERBOSE = args.verbose
+    
+    return args.local
 
 def main():
-    args_parser()
+    local = args_parser()
 
     #Packets are blocked and not forwarded
-    os.system('iptables -F')
-    os.system('iptables -I FORWARD -j NFQUEUE --queue-num 0')
+    if local:
+        os.system('iptables -F')
+        os.system('iptables -I INPUT -j NFQUEUE --queue-num 0')
+        os.system('iptables -I OUTPUT -j NFQUEUE --queue-num 0')
+    else:
+        os.system('iptables -F')
+        os.system('iptables -I FORWARD -j NFQUEUE --queue-num 0')
+
 
     #O = queue num
     queue = netfilterqueue.NetfilterQueue()
