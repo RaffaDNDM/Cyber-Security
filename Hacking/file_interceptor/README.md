@@ -1,4 +1,6 @@
 # DNS Spoofing
+Response seq = Request ack
+
 This program is going to detect the IP packets sent by user to the server. Then it's going to modify the content of these packets. 
 To use this Sniffer, you need to install the following modules for python3, through this command:
 <pre lang="bash"><code>apt install build-essential python3 libnetfilter-queue-dev</code></pre>
