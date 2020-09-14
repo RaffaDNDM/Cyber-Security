@@ -72,7 +72,7 @@ def args_parser():
         MY_IP = get_if_addr(args.interface)
 
     if args.target:
-        TARGET = args.target
+        TARGET = '.'+args.target
 
     if args.url:
         URL=args.url
