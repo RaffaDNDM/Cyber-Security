@@ -28,7 +28,7 @@ def check_format_IP(network):
 
     IP_numbers = params[0].split('.')
     
-    if len(IP_numbers)!=4:
+    if not len(IP_numbers)==4:
         raise NoNetworkSpecified
     else:
         for num in IP_numbers:
