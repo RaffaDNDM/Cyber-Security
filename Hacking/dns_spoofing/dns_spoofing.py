@@ -9,12 +9,6 @@ import os
 MY_IP = get_if_addr(conf.iface) #IP of DEFAULT INTERFACE
 TARGET = 'www.google.com' #DEFAULT TARGET
 
-class NoInterfaceSpecified(Exception):
-    pass
-
-class NoTargetSpecified(Exception):
-    pass
-
 #Process each packet
 def process_packet(packet):
     IP_pkt = IP(packet.get_payload())
