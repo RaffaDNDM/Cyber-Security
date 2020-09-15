@@ -9,4 +9,4 @@ This command will perform the javascript command in <i>code.js</i>, that in the 
 <img src="output.png" width="500" alt="output"><br>
 To check which parameters you can insert, you can type the command:
 <pre lang="bash"><code>python3 code_interceptor.py --help </code></pre>
-The program must run with superuser privileges and can work only on HTTP web pages.
+The program must run with superuser privileges and can work only on HTTP web pages. Starting from this program, you can modify or add HTML tags, by changing <code></body></code> with another tag.
