@@ -10,4 +10,4 @@ This command will display only the TCP packets intercepted, highligthing packets
 To check which parameters you can insert, you can type the command:
 <pre lang="bash"><code>python3 file_interceptor.py --help </code></pre>
 Remember to clean the cache, if you apply changes to program or URL and want to test them. For example, if you redirect the requests of <b>pdf</b> files to <i>www.google.com</i> and then you want to redirect the same requests to <i>www.youtube.com</i>, the traffic will be redirect also to <i>www.google.com</i>.
-The program must run with superuser privileges.
+The program must run with superuser privileges and can work only on HTTP web pages.

