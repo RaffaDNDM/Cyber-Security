@@ -6,7 +6,7 @@ To use this Interceptor, you need to install the following modules for python3, 
 To run the program, you need to type for example this command on bash:
 <pre lang="bash"><code>python3 hook_method.py</code></pre>
 To check which parameters you can insert, you can type the command:
-<pre lang="bash"><code>python3 code_interceptor.py --help </code></pre>
+<pre lang="bash"><code>python3 hook_method.py --help </code></pre>
 The program must run with superuser privileges and can work only on HTTP web pages.
 For management of BeEF credentials, you can manage the file:
 <pre lang="bash"><code>/usr/share/beef-xss/config.yaml</code></pre>
