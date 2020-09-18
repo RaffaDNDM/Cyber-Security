@@ -1,5 +1,4 @@
 '''
-08-27-2020
 Because of how pylint works, you cannot type directly
 import scapy.all as scapy
 you need to import each module separately

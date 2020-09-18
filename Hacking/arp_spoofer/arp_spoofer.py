@@ -1,4 +1,4 @@
-from scapy.layers.l2 import ARP, Ether, srp, send
+from scapy.layers.l2 import ARP, Ether, sniff
 from termcolor import cprint
 import argparse
 import time
