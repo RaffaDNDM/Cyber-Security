@@ -7,6 +7,9 @@ from scapy.layers.inet import IP
 DROP = False
 VERBOSE = False
 
+'''
+Process each packet in Network Filter queue
+'''
 def process_packet(packet):
     global DROP, VERBOSE, NUM_PKTS
     
@@ -18,14 +21,22 @@ def process_packet(packet):
 
     NUM_PKTS+=1
     if DROP:
+        #Block the connection of the victim
         packet.drop()
     else:
+        #Analyse packets sent between victim and servers
         packet.accept()
 
+
+'''
+Parser of command line arguments
+'''
 def args_parser():
     global DROP, VERBOSE
+
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
+    
     #Initialization of needed arguments
     parser.add_argument("-drop", "-d", dest="drop", help="If specified, it drops all packets otherwise accept them", action='store_true')
     parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
@@ -40,7 +51,12 @@ def args_parser():
     
     return args.local
 
+
+'''
+Main function
+'''
 def main():
+    #Parser of command line arguments
     local = args_parser()
 
     #Packets are blocked and not forwarded
@@ -63,6 +79,7 @@ def main():
         queue.unbind()
         print('Flushing ip table.', end='\n\n')
         os.system('iptables -F')
+
 
 if __name__=='__main__':
 	main()

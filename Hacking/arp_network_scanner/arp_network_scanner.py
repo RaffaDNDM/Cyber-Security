@@ -15,26 +15,37 @@ import socket
 BROADCAST_MAC = 'ff:ff:ff:ff:ff:ff'
 IP_MASK = 0x80000000
 
+'''
+Error raised if the user doesn't specify a valid network IP address
+'''
 class NoNetworkSpecified(Exception):
     pass
 
+'''
+Evaluate if network IP address is valid (x.x.x.x/n_netmask)
+'''
 def check_format_IP(network):
     #params[0]=IP 
     #params[1]=number of bits of netmask
     params = network.split('/')
    
+    #Error if the number of bits of the netmask is not specified
     if not len(params)==2 or int(params[1])>32 or int(params[1])<=0:
         raise NoNetworkSpecified
 
+    #Split IP address in its fields
     IP_numbers = params[0].split('.')
     
+    #Error if the number of fields is not equal to 4
     if not len(IP_numbers)==4:
         raise NoNetworkSpecified
     else:
+        #Check if each field has valid value (>=0 and <256)
         for num in IP_numbers:
             if(int(num)>255 or int(num)<0):
                 raise NoNetworkSpecified
 
+    #Print Netmask and IP address specified 
     cprint('\n   Netmask:  ', 'blue', attrs=['bold',], end='')
     print(socket.inet_ntoa(struct.pack(">I", (0xffffffff << (32 - int(params[1]))) & 0xffffffff)))
     cprint('IP address:  ', 'yellow', attrs=['bold',], end='')
@@ -43,6 +54,9 @@ def check_format_IP(network):
     return network
         
 
+'''
+Parser of command line arguments
+'''
 def args_parser():
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
@@ -63,13 +77,17 @@ def args_parser():
 
     return network
 
+
+'''
+Perform network scanning and print obtained info
+'''
 def network_scan(network):
     #Create ARP request
     arp_head = ARP(pdst=network)
     ether_head = Ether(dst=BROADCAST_MAC)
     request = ether_head/arp_head
     
-    #Send request and wait for response
+    #Send ARP request and wait for response
     responses_list = srp(request, timeout=1)[0]
 
     cprint(' ______________________________________', 'red')
@@ -79,6 +97,7 @@ def network_scan(network):
     cprint(" {:^18} ".format('MAC address'), 'blue', 'on_yellow', end='')
     cprint("|", 'red')
 
+    #Check all the responses for sent packets
     for response in responses_list:
         #response[0]= packet sent
         #response[1]= response
@@ -92,7 +111,11 @@ def network_scan(network):
     cprint('|_________________|____________________|', 'red', end='\n\n')
 
 
+'''
+Main function
+'''
 def main():
+    #Parser of command line arguments
     network = args_parser()    
     #Simplest way to implement ARP network scanner 
     #arping("192.168.1.1/24")

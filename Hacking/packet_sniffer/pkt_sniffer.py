@@ -8,6 +8,7 @@ from termcolor import cprint
 import subprocess
 import csv 
 
+#Format of the main packets
 #! Network Byte Order = Big Endian Order
 ETH_FORMAT = '! 6s 6s H'
 ARP_FORMAT = '! H H B B H 6s 4s 6s 4s'
@@ -15,45 +16,54 @@ IP_FORMAT = '! x B H H H B B H 4s 4s'
 TCP_FORMAT = '! H H L L H'
 UDP_FORMAT = '! H H H H'
 
+#IP type
 ICMP_NUM = 1
 TCP_NUM = 6
 UDP_NUM = 17
 
+#File with ICMP types
 ICMP_TYPE_FILE = "icmp-parameters-types.csv"
-LINE = '____________________________________________'
 
+#Color on display for info on Layer 2, 3, 4 packets
 COLOR_L2 = 'red'
 COLOR_L3 = 'green'
 COLOR_L4 = 'blue'
-
+#String to be print for IP packets on display
 network_types = {ICMP_NUM:'ICMP header', TCP_NUM:'TCP header', UDP_NUM:'UDP header'}
+LINE = '____________________________________________'
 
 
-
+'''
+Obtain MAC address string from the number specified
+'''
 def get_MAC(addr):
-    '''
-    IP address with dot format from array of char numbers
-    Convert each char number of addr into string
-    and then separate them with :
-    '''
+    #MAC address with dot format from array of char numbers
+    #Convert each char number of addr into string
+    #and then separate them with :
     return ':'.join(map(str, addr))
 
 
-
+'''
+Obtain MAC address string from the number specified
+'''
 def get_IP(addr):
-    '''
-    IP address with dot format from array of char numbers
-    Convert each char number of addr into string
-    and then separate them with :
-    '''
+    #IP address with dot format from array of char numbers
+    #Convert each char number of addr into string
+    #and then separate them with :
     return '.'.join(map(str, addr))
 
 
-
+'''
+Ethernet decapsulation
+'''
 def eth_pkt(raw_data, verbose):
     dst, src, protocol_type = unpack(ETH_FORMAT, raw_data[:14])
+    
+    #Source MAC address
     src_MAC = get_MAC(src)
+    #Destination MAC address
     dst_MAC = get_MAC(dst)
+    #Payload of Ethernet packet
     data = raw_data[14:]
             
     if verbose:
@@ -68,7 +78,9 @@ def eth_pkt(raw_data, verbose):
     return src_MAC, dst_MAC, protocol_type, data
 
 
-
+'''
+ARP decapsulation
+'''
 def arp_pkt(raw_data, verbose):
     hw_protocol, lv3_protocol, hw_len, lv3_len, op_code, src_hw_addr, src_lv3_addr, dst_hw_addr, dst_lv3_addr = unpack('! H H B B H 6s 4s 6s 4s', raw_data[:28])
     
@@ -108,7 +120,9 @@ def arp_pkt(raw_data, verbose):
     return op, src_MAC, dst_MAC, src_IP, dst_IP
 
 
-
+'''
+IPv4 decapsulation
+'''
 def ipv4_pkt(raw_data, verbose):
     #! Network Byte Order = Big Endian Order
     vhl = raw_data[0]
@@ -116,6 +130,7 @@ def ipv4_pkt(raw_data, verbose):
     version = vhl >> 4
     #Length of IP Header in words of 4 bytes
     header_len = (vhl & 0xF) * 4
+    
     #x = padding Byte
     # ttl, proto, src, dst = struct.unpack('! 6s 6s H', raw_data[1:header_len])
     tos, total_length, id_pkt, flag_frag, ttl, protocol, checksum, src, dst = unpack('! x B H H H B B H 4s 4s', raw_data[:header_len])
@@ -153,13 +168,17 @@ def ipv4_pkt(raw_data, verbose):
     return version, header_len, ttl, protocol, src_IP, dst_IP, data
 
 
-
+'''
+ICMP decapsulation
+'''
 def icmp_pkt(raw_data, verbose):
     type_list = ''
     
+    #Open ICMP types packet
     with open(ICMP_TYPE_FILE, 'r') as f:
         rows = csv.reader(f, delimiter=',')
-
+        
+        #Search for correct ICMP type in the list
         for row in rows:
             if(int(row[0])==int(raw_data[0])):
                 type_list = row[1]
@@ -172,12 +191,15 @@ def icmp_pkt(raw_data, verbose):
     return type_list[1]
 
 
-
+'''
+TCP decapsulation
+'''
 def tcp_pkt(raw_data, verbose):
     src_port, dst_port, seq, ack, off_res_flags = unpack(TCP_FORMAT, raw_data[:14])
     
     #Offset = number of words of 4 bytes
     offset = (off_res_flags >> 12) * 4
+    #Value of flag bits
     urg = (off_res_flags & 32) >> 5
     ack = (off_res_flags & 16) >> 4
     psh = (off_res_flags & 8) >> 3
@@ -202,7 +224,9 @@ def tcp_pkt(raw_data, verbose):
     return src_port, dst_port, seq, ack, urg, ack, psh, rst, syn, fin, data
 
 
-
+'''
+UDP decapsulation
+'''
 def udp_pkt(raw_data, verbose):
     src_port, dst_port, udp_len, checksum = unpack(UDP_FORMAT, raw_data[:8])
     
@@ -220,7 +244,9 @@ def udp_pkt(raw_data, verbose):
     return src_port, dst_port, udp_len, checksum
 
 
-
+'''
+Print number of sniffed packets for each type of protocol
+'''
 def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num):
             
     subprocess.call('cls' if os.name=='nt' else 'clear')
@@ -251,7 +277,9 @@ def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num
     cprint(LINE, COLOR_L4, attrs=['bold',], end='\n\n')
 
 
-
+'''
+Parser of command line arguments
+'''
 def args_parser():
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
@@ -270,7 +298,9 @@ def args_parser():
     return args.interface, args.verbose
 
 
-
+'''
+Main function
+'''
 def main():
     ETH_P_ALL = 3
     sd = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_ALL))

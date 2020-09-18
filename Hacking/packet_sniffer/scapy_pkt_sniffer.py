@@ -22,10 +22,15 @@ COLOR_L3 = 'green'
 COLOR_L4 = 'blue'
 
 
+'''
+Parser of command line arguments
+'''
 def args_parser():
     global INTERFACE, VERBOSE
+
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
+    
     #Initialization of needed arguments
     parser.add_argument("-interface", "-if", dest="interface", help="Interface on which we apply packet sniffing")
     parser.add_argument("-verbose", "-v", dest="verbose", help="Specification of packets content", action='store_true')
@@ -42,7 +47,9 @@ def args_parser():
     INTERFACE = args.interface
 
 
-
+'''
+Print number of sniffed packets for each type of protocol
+'''
 def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num):
             
     subprocess.call('cls' if os.name=='nt' else 'clear')
@@ -73,19 +80,24 @@ def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num
     cprint(LINE, COLOR_L4, attrs=['bold',], end='\n\n')
 
 
-
-def analyze_pkt(packet):
+'''
+Process each packet sniffed
+'''
+def analyse_pkt(packet):
     global eth_num, arp_num, ip_num, tcp_num, udp_num, icmp_num, unkown_transport_num, unkown_net_num
 
+    #Laayer 2 packet
     eth_num+=1
 
     if VERBOSE:
         print(packet.show())
     else:
+        #Layer 3 packet
         if packet.haslayer(ARP):
             arp_num+=1
         elif packet.haslayer(IP):
             ip_num+=1
+            #Layer 4 packet
             if packet.haslayer(TCP):
                 tcp_num+=1
             elif packet.haslayer(UDP):
@@ -97,16 +109,19 @@ def analyze_pkt(packet):
         else:
             unkown_net_num+=1
 
+        #Print number of sniffed packets
         print_state_pkt(INTERFACE, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num)
 
 
-
+'''
+Main function
+'''
 def main():
     args_parser()
 
     try:
         #No store of the packet but analyzing on fly
-        sniff(iface=INTERFACE, store=False, prn=analyze_pkt)
+        sniff(iface=INTERFACE, store=False, prn=analyse_pkt)
     except KeyboardInterrupt:
         print('', end='\n\n')
 
