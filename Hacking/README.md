@@ -21,7 +21,7 @@ This program injects <i>hook.js</i> file in a remote Web Page and then permits M
 This program detect IP packets and drop or accept all of them.
 </details>
 <details><summary><i><b>Key Logger</b></i></summary>
-This program works in background detecting the keys presses by the user.
+This program works in background detecting the keys presses by the user and sends the resulting log to a specified mail address.
 </details>
 <details><summary><i><b>MAC changer</b></i></summary>
 This program changes the MAC address of a network interface on the machine.
