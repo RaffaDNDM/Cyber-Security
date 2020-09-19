@@ -32,3 +32,6 @@ This program analyzes and does decapsulation of received packets by the machine.
 <details><summary><i><b>Password HTTP Sniffer</b></i></summary>
 This program evaluates if there can be a possible login access in POST request in HTTP web page.
 </details>
+<details><summary><i><b>Send stored passwords</b></i></summary>
+This program must work on Windows victim machine, and report the stored password on the victim in an e-mail sent to a specified address.
+</details>
