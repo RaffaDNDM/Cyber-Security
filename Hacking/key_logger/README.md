@@ -5,7 +5,7 @@ pip3 install pynput
 ```
 To run the program, you need to type for example this command on bash:
 ```bash
-python3 key_logger.py -t 6
+python3 run_logger.py -t 6
 ```
 where <i>6</i> is the refresh time. Hence every <i>6 seconds</i>, the program will send the obtained log info to specified mail address. The program must run with superuser privileges.
 
