@@ -1,9 +1,9 @@
 # Send stored passwords of victim
-The program takes a photo of the screen and sends it to the specified mail address.<br> 
+The program takes a photo of the screen and sends it to the specified mail address.<br>
 To use this program, you need to install the following python modules, through this command:
-<pre lang="bash"><code>pip3 install pyautogui</code></pre>
+<pre lang="bash"><code>pip3 install opencv-python</code></pre>
 To run the program, you need to type the following command on terminal:
-<pre lang="bash"><code>python3 screen_shot</code></pre>
+<pre lang="bash"><code>python3 webcam_shot</code></pre>
 
 ### Credentials file
 To run correctly the program, you need to add a file, called <code>credentials.txt</code> in the same directory of the program. The file must contains a line with this info in this format:
