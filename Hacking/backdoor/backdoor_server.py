@@ -36,9 +36,10 @@ class Listener:
         if os.path.exists(path) and os.path.isfile(path):
             with open(path, 'rb') as f:
                 f_bytes = f.read()
-                return f'{len(f_bytes)}\r\n'.encode()+f_bytes
+                self.client_sd.send(f'{len(f_bytes)}\r\n'.encode()+f_bytes)
         else:
             print(f'File {path} not found')
+            self.client_sd.send(b'0\r\n')
 
     def receive_file(self, size, name):
         file_bytes = self.client_sd.recv(size)
@@ -60,7 +61,7 @@ class Listener:
             
             elif cmd_list[0]=='down' and len(cmd_list)>1:
                 if int(size) == 0:
-                    print('No file download')
+                    print('No file download/found')
                 else:
                     head, tail = os.path.split(cmd_list[1])
                     self.receive_file(int(size), tail)
