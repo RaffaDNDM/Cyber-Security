@@ -12,7 +12,7 @@ def discover_hidden_paths(url):
     cprint('Discovered paths','blue')
     cprint('_____________________','blue')
 
-    with open('subdomains.txt', 'r') as sub_list:
+    with open('files_dirs.txt', 'r') as sub_list:
         for line in sub_list:
             hidden_path = line.strip()
             new_url = url+'/'+hidden_path
