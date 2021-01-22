@@ -8,7 +8,7 @@ def url_exist(url):
     except requests.exceptions.ConnectionError:
         pass
 
-def discover_subdomains(url):
+def crawler_subdomains(url):
     cprint('Discovered subdomains','blue')
     cprint('_____________________','blue')
 
@@ -29,7 +29,7 @@ def main():
     args = parser.parse_args()
 
     if url_exist(args.domain):
-        discover_subdomains(args.domain)
+        crawler_subdomains(args.domain)
     else:
         print('Write an existing domain')
 

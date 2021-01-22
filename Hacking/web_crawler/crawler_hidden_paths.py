@@ -8,7 +8,7 @@ def url_exist(url):
     except requests.exceptions.ConnectionError:
         pass
 
-def discover_hidden_paths(url):
+def crawler_hidden_paths(url):
     cprint('Discovered paths','blue')
     cprint('_____________________','blue')
 
@@ -29,7 +29,7 @@ def main():
     args = parser.parse_args()
 
     if url_exist(args.url):
-        discover_hidden_paths(args.url)
+        crawler_hidden_paths(args.url)
     else:
         print('Write an existing domain')
 
