@@ -12,7 +12,7 @@ def url_exist(url):
 
 def references_in_url(url):
     response = requests.get(url)
-    return re.findall('(?:href=")(.*?)"', response.content)
+    return re.findall('(?:href=")(.*?)"', str(response.content))
 
 URL_LIST = []
 
@@ -33,6 +33,7 @@ def crawler_ref(url):
         #The url must be on the site and unique (not already discovered)
         if url in complete_url and complete_url not in URL_LIST:
             print(colored('> ', 'green')+complete_url)
+            URL_LIST.append(complete_url)
             #Recursion on url already discoverd
             crawler_ref(complete_url)
 
@@ -42,9 +43,9 @@ def main():
     args = parser.parse_args()
 
     if url_exist(args.url):
-        cprint('Discovered paths','blue')
+        cprint('Discovered URLs','blue')
         cprint('_____________________','blue')
-        crawler_ref(args.url)
+        crawler_ref('http://'+args.url)
         cprint('_____________________','blue')
     else:
         print('Write an existing domain')
