@@ -5,10 +5,10 @@ import argparse
 def guess_password(url):
     post_request={'username':'admin', 'password':'', 'Login':'submit'}
 
-    cprint('    Credentials','blue')
+    cprint('\n    Credentials','blue')
     cprint('_____________________','blue')
 
-    with open('files_dirs.txt', 'r') as sub_list:
+    with open('passwords.txt', 'r') as sub_list:
         for line in sub_list:
             password = line.strip()
             post_request['password'] = password
@@ -20,7 +20,7 @@ def guess_password(url):
                       post_request['password'])
                 break
 
-    cprint('_____________________','blue')
+    cprint('_____________________','blue', end='\n\n')
 
 def main():
     parser = argparse.ArgumentParser()
