@@ -1,5 +1,4 @@
 import operator
-import bitarray
 import os
 import sys
 import argparse
