@@ -1,6 +1,6 @@
 # Steganography
 The main types of steganography are the following ones:
-<details><summary>Text Steganography</summary>
+<details><summary><b><i>Text Steganography</i></b></summary>
 Text Steganography is hiding information inside the text files. It involves things like changing the format of existing text, changing words within a text, generating random character sequences or using context-free grammars to generate readable texts. Various techniques used to hide the data in the text are:
 <ul>
 <li>Format Based Method</li>
@@ -8,7 +8,7 @@ Text Steganography is hiding information inside the text files. It involves thin
 <li>Linguistic Method</li>
 </ul>
 </details>
-<details><summary>Image Steganography</summary>
+<details><summary><b><i>Image Steganography</i></b></summary>
 Hiding the data by taking the cover object as the image is known as image steganography.  In digital steganography, images are widely used cover source because there are a huge number of bits present in the digital representation of an image. There are a lot of ways to hide information inside an image. Common approaches include:
 <ul>
 <li>Masking and Filtering</li>
@@ -18,7 +18,7 @@ Hiding the data by taking the cover object as the image is known as image stegan
 </ul>
 </details>
 
-<details><summary>Audio Steganography</summary>
+<details><summary><b><i>Audio Steganography</i></b></summary>
 In audio steganography, the secret message is embedded into an audio signal which alters the binary sequence of the corresponding audio file. Hiding secret messages in digital sound is a much more difficult process when compared to others, such as Image Steganography. Different methods of audio steganography include:
 <ul>
 <li>Least Significant Bit Encoding</li>
@@ -29,7 +29,7 @@ In audio steganography, the secret message is embedded into an audio signal whic
 This method hides the data in WAV, AU, and even MP3 sound files.
 </details>
 
-<details><summary>Video Steganography</summary>
+<details><summary><b><i>Video Steganography</i></b></summary>
 In Video Steganography you can hide kind of data into digital video format. The advantage of this type is a large amount of data can be hidden inside and the fact that it is a moving stream of images and sounds. You can think of this as the combination of Image Steganography and Audio Steganography. Two main classes of Video Steganography include:
 <ul>
 <li>Embedding data in uncompressed raw video and compressing it later</li>
@@ -37,7 +37,7 @@ In Video Steganography you can hide kind of data into digital video format. The 
 </ul>
 </details>
 
-<details><summary>Network Steganography (Protocol Steganography)</summary>
+<details><summary><b><i>Network Steganography (Protocol Steganography)</i></b></summary>
 It is the technique of embedding information within network control protocols used in data transmission such TCP, UDP, ICMP etc. You can use steganography in some covert channels that you can find in the OSI model. For Example, you can hide information in the header of a TCP/IP packet in some fields that are either optional.
 </details>
 
