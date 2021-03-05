@@ -1,6 +1,7 @@
 from scipy.io import wavfile as wave
 import numpy as np
 from termcolor import cprint
+import utility
 
 class AudioStega:
     ASCII_SIZE = 8 #size of an ASCII char in bits
@@ -8,23 +9,8 @@ class AudioStega:
     def __init__(self, path):
         self.rate, self.audio = wave.read(path)
 
-    def msg_to_byte(self, msg):
-        encoded_msg = []
-  
-        for x in msg:
-            encoded_msg.append(format(ord(x), '08b'))
-
-        return encoded_msg
-
-    def byte_to_msg(self, msg):
-        decoded_msg = ''
-        for x in msg:
-            decoded_msg+=chr(int(x, 2))
-
-        return decoded_msg
-
     def encode(self, msg, output_path):
-        msg = self.msg_to_byte(msg)
+        msg = utility.msg_to_byte(msg)
         print(msg)
 
         new_audio = np.copy(self.audio)
@@ -122,7 +108,7 @@ class AudioStega:
                 break
 
         print(msg)
-        return self.byte_to_msg(msg)
+        return utility.byte_to_msg(msg)
 
     def decode_stereo(self, audio):
         msg = []
@@ -150,11 +136,11 @@ class AudioStega:
                 break
 
         print(msg)
-        return self.byte_to_msg(msg)
+        return utility.byte_to_msg(msg)
 
 def main():
     #audio_st = AudioStega('../dat/audio.wav')
-    #audio_st.encode('Hello RaffaDNDM!', 'dat/encoded_audio.wav')
+    #audio_st.encode('Hello RaffaDNDM!', '../dat/encoded_audio.wav')
     audio_st = AudioStega('../dat/encoded_audio.wav')
     audio_st.decode()
 
