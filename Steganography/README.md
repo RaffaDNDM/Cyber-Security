@@ -1,44 +1,12 @@
 # Steganography
-The main types of steganography are the following ones:
-<details><summary><b><i>Text Steganography</i></b></summary>
-Text Steganography is hiding information inside the text files. It involves things like changing the format of existing text, changing words within a text, generating random character sequences or using context-free grammars to generate readable texts. Various techniques used to hide the data in the text are:
-<ul>
-<li>Format Based Method</li>
-<li>Random and Statistical Generation</li>
-<li>Linguistic Method</li>
-</ul>
-</details>
+A secret message can be hidden in a file using one of the following steganography methods:
 <details><summary><b><i>Image Steganography</i></b></summary>
-Hiding the data by taking the cover object as the image is known as image steganography.  In digital steganography, images are widely used cover source because there are a huge number of bits present in the digital representation of an image. There are a lot of ways to hide information inside an image. Common approaches include:
-<ul>
-<li>Masking and Filtering</li>
-<li>Redundant Pattern Encoding</li>
-<li>Encrypt and Scatter</li>
-<li>Coding and Cosine Transformation</li>
-</ul>
+LSB approach by mapping each ASCII character (1 byte) into 3 pixels. Each bit of the ASCII character will modify the LSB bit of each RGB component value of the 3 pixels. The LSB of the 3rd component value of the last pixel will be <i>1</i> (odd number) if the message to be hidden is over, <i>0</i> otherwise (even number).
 </details>
-
 <details><summary><b><i>Audio Steganography</i></b></summary>
-In audio steganography, the secret message is embedded into an audio signal which alters the binary sequence of the corresponding audio file. Hiding secret messages in digital sound is a much more difficult process when compared to others, such as Image Steganography. Different methods of audio steganography include:
-<ul>
-<li>Least Significant Bit Encoding</li>
-<li>Parity Encoding</li>
-<li>Phase Coding</li>
-<li>Spread Spectrum</li>
-</ul>
-This method hides the data in WAV, AU, and even MP3 sound files.
+LSB approach by mapping each ASCII character (1 byte) into 9 samples of the audio file. Each bit of the ASCII character will modify the LSB bit of each sample. The LSB of the 9th sample will be <i>1</i> (odd number) if the message to be hidden is over, <i>0</i> otherwise (even number).
 </details>
-
-<details><summary><b><i>Video Steganography</i></b></summary>
-In Video Steganography you can hide kind of data into digital video format. The advantage of this type is a large amount of data can be hidden inside and the fact that it is a moving stream of images and sounds. You can think of this as the combination of Image Steganography and Audio Steganography. Two main classes of Video Steganography include:
-<ul>
-<li>Embedding data in uncompressed raw video and compressing it later</li>
-<li>Embedding data directly into the compressed data stream</li>
-</ul>
-</details>
-
-<details><summary><b><i>Network Steganography (Protocol Steganography)</i></b></summary>
-It is the technique of embedding information within network control protocols used in data transmission such TCP, UDP, ICMP etc. You can use steganography in some covert channels that you can find in the OSI model. For Example, you can hide information in the header of a TCP/IP packet in some fields that are either optional.
-</details>
-
-The description of types was taken from this [link](https://www.edureka.co/blog/steganography-tutorial).
+To run the program, you need to install the following dependencies:
+```
+pip3 install argparse termcolor numpy scipy pillow
+```
