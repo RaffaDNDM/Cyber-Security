@@ -6,11 +6,14 @@ from scapy.layers.inet import IP
 
 DROP = False
 VERBOSE = False
+NUM_PKTS = 0
 
-'''
-Process each packet in Network Filter queue
-'''
+
 def process_packet(packet):
+    '''
+    Process each packet in Network Filter queue
+    '''
+
     global DROP, VERBOSE, NUM_PKTS
     
     if VERBOSE:
@@ -28,10 +31,11 @@ def process_packet(packet):
         packet.accept()
 
 
-'''
-Parser of command line arguments
-'''
 def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
     global DROP, VERBOSE
 
     #Parser of command line arguments
@@ -51,10 +55,6 @@ def args_parser():
     
     return args.local
 
-
-'''
-Main function
-'''
 def main():
     #Parser of command line arguments
     local = args_parser()
@@ -79,7 +79,6 @@ def main():
         queue.unbind()
         print('Flushing ip table.', end='\n\n')
         os.system('iptables -F')
-
 
 if __name__=='__main__':
 	main()

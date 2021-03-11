@@ -9,25 +9,20 @@ from email.mime.multipart import MIMEMultipart
 import argparse
 import cv2
 
-'''
-Parser of command line arguments
-'''
-def args_parser():
-    #Parser of command line arguments
-    parser = argparse.ArgumentParser()
-    
-    #Initialization of needed arguments
-    parser.add_argument("-refresh", "-t", dest="refresh_time", help="Refreshing time of log info")
-    
-    #Parse command line arguments
-    args = parser.parse_args()
-    
-    #Check if the arguments have been specified on command line
-
-    return args.refresh_time
-
 
 def send_mail(email, password, img_name):
+    '''
+    Send e-mail with webcam shot attachment.
+
+    Args:
+        email (str): e-mail address
+
+        password (str): Password of the e-mail address
+
+        img_name (str): Name of the image to be sent
+    '''
+
+    #Create the mail
     msg = MIMEMultipart()
     msg['Subject'] = 'Webcam shot'
     msg['From'] = email
@@ -51,6 +46,15 @@ def send_mail(email, password, img_name):
 
 
 def credentials():
+    '''
+    Read credentials of the user from the file.
+
+    Returns:
+        mail (str): e-mail address of the user
+
+        password (str): password address of the user
+    '''
+
     with open('credentials.txt', "r") as f:
         credentials = ((f.read()).split('\n'))[0].split(' ')
 
@@ -61,14 +65,43 @@ def credentials():
 
 
 def webcam_shot():
-    #Name of the shot (shot+current_time.png)
-    img_name = 'shot'+str(time.localtime())+'.png'
+    '''
+    Take a screenshot.
+
+    Returns:
+        img_name (str): Name of the screenshot image
+    '''
+
+    #Take webcam shot
     camera = cv2.VideoCapture(0)
     return_value, image = camera.read()
+    #Name of the shot (shot+current_time.png)
+    img_name = 'shot'+str(time.localtime())+'.png'
+    #Store the image
     cv2.imwrite(img_name, image)
+    #Close webcam connection
     del(camera)
 
     return img_name
+
+
+def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
+    #Parser of command line arguments
+    parser = argparse.ArgumentParser()
+    
+    #Initialization of needed arguments
+    parser.add_argument("-refresh", "-t", dest="refresh_time", help="Refreshing time of log info")
+    
+    #Parse command line arguments
+    args = parser.parse_args()
+    
+    #Check if the arguments have been specified on command line
+
+    return args.refresh_time
 
 
 def main():

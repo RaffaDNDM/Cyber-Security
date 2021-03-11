@@ -3,12 +3,32 @@ from termcolor import cprint, colored
 import argparse
 
 def url_exist(url):
+    '''
+    Check if an URL exists by returning the 
+    resource obtain through the HTTP GET request.
+
+    Args:
+        url (str): URL to be checked.
+    
+    Returns:
+        result (str): Resource obtained at the 
+                      specified URL
+    '''
+
     try:
         return requests.get('http://'+url)
     except requests.exceptions.ConnectionError:
         pass
 
 def crawler_subdomains(url):
+    '''
+    Display the discovered hidden subdomains of a domain.
+
+    Args:
+        url (str): URL of the domain in which you want 
+                   to discover the hidden subdomains
+    '''
+    
     cprint('Discovered subdomains','blue')
     cprint('_____________________','blue')
 

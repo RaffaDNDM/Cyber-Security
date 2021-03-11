@@ -15,10 +15,11 @@ PORT = 80 #PORT for detection of packets (80 HTTP, 10000 HTTPS with SSLstrip)
 LINE = '____________________________________________________________'
 
 
-'''
-Process each packet on Network filter queue
-'''
 def process_packet(packet):
+    '''
+    Process each packet on Network filter queue
+    '''
+
     global ack_list, TARGET, URL, PORT
     
     #Convertion of filtered packet to scapy IP packet
@@ -62,10 +63,11 @@ def process_packet(packet):
     packet.accept()
 
 
-'''
-Parser of command line argument
-'''
 def args_parser():
+    '''
+    Parser of command line argument
+    '''
+
     global MY_IP, TARGET, URL
     
     #Parser of command line arguments
@@ -93,10 +95,6 @@ def args_parser():
     
     return args.local, args.https
 
-
-'''
-Main function
-'''
 def main():
     global PORT
     #Parser of command line arguments
@@ -131,7 +129,6 @@ def main():
         print('Flushing ip table.', end='\n')
         cprint(f'{LINE}','green', attrs=['bold',], end='\n\n')
         os.system('iptables -F')
-
 
 if __name__=='__main__':
 	main()

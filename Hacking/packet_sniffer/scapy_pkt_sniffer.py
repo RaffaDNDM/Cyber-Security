@@ -22,35 +22,10 @@ COLOR_L3 = 'green'
 COLOR_L4 = 'blue'
 
 
-'''
-Parser of command line arguments
-'''
-def args_parser():
-    global INTERFACE, VERBOSE
-
-    #Parser of command line arguments
-    parser = argparse.ArgumentParser()
-    
-    #Initialization of needed arguments
-    parser.add_argument("-interface", "-if", dest="interface", help="Interface on which we apply packet sniffing")
-    parser.add_argument("-verbose", "-v", dest="verbose", help="Specification of packets content", action='store_true')
-
-    #Parse command line arguments
-    args = parser.parse_args()
-    
-    #Check if the arguments have been specified on command line
-    if not args.interface:
-        parser.print_help()
-        exit(0)
-    
-    VERBOSE = args.verbose
-    INTERFACE = args.interface
-
-
-'''
-Print number of sniffed packets for each type of protocol
-'''
 def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num):
+    '''
+    Print number of sniffed packets for each type of protocol
+    '''
             
     subprocess.call('cls' if os.name=='nt' else 'clear')
     cprint('\n\nInterface:   ', 'yellow', attrs=['bold',], end='')
@@ -80,10 +55,11 @@ def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num
     cprint(LINE, COLOR_L4, attrs=['bold',], end='\n\n')
 
 
-'''
-Process each packet sniffed
-'''
 def analyse_pkt(packet):
+    '''
+    Process each packet sniffed
+    '''
+
     global eth_num, arp_num, ip_num, tcp_num, udp_num, icmp_num, unkown_transport_num, unkown_net_num
 
     #Laayer 2 packet
@@ -113,9 +89,32 @@ def analyse_pkt(packet):
         print_state_pkt(INTERFACE, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num)
 
 
-'''
-Main function
-'''
+def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
+    global INTERFACE, VERBOSE
+
+    #Parser of command line arguments
+    parser = argparse.ArgumentParser()
+    
+    #Initialization of needed arguments
+    parser.add_argument("-interface", "-if", dest="interface", help="Interface on which we apply packet sniffing")
+    parser.add_argument("-verbose", "-v", dest="verbose", help="Specification of packets content", action='store_true')
+
+    #Parse command line arguments
+    args = parser.parse_args()
+    
+    #Check if the arguments have been specified on command line
+    if not args.interface:
+        parser.print_help()
+        exit(0)
+    
+    VERBOSE = args.verbose
+    INTERFACE = args.interface
+
+
 def main():
     args_parser()
 

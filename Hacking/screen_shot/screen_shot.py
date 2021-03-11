@@ -9,25 +9,19 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 import argparse
 
-'''
-Parser of command line arguments
-'''
-def args_parser():
-    #Parser of command line arguments
-    parser = argparse.ArgumentParser()
-    
-    #Initialization of needed arguments
-    parser.add_argument("-refresh", "-t", dest="refresh_time", help="Refreshing time of log info")
-    
-    #Parse command line arguments
-    args = parser.parse_args()
-    
-    #Check if the arguments have been specified on command line
-
-    return args.refresh_time
-
-
 def send_mail(email, password, img_name):
+    '''
+    Send e-mail with screenshot attachment.
+
+    Args:
+        email (str): e-mail address
+
+        password (str): Password of the e-mail address
+
+        img_name (str): Name of the image to be sent
+    '''
+
+    #e-mail message
     msg = MIMEMultipart()
     msg['Subject'] = 'Screenshot'
     msg['From'] = email
@@ -49,7 +43,17 @@ def send_mail(email, password, img_name):
     server.sendmail(email, email, msg.as_string())
     server.quit()
 
+
 def credentials():
+    '''
+    Read credentials of the user from the file.
+
+    Returns:
+        mail (str): e-mail address of the user
+
+        password (str): password address of the user
+    '''
+
     with open('credentials.txt', "r") as f:
         credentials = ((f.read()).split('\n'))[0].split(' ')
 
@@ -58,13 +62,41 @@ def credentials():
 
     return mail, password
 
+
 def screenshot():
+    '''
+    Take a screenshot.
+
+    Returns:
+        img_name (str): Name of the screenshot image
+    '''
+
+    #Take screenshot
     myScreenshot = pyautogui.screenshot()
-    
     #Name of the screenshot (screenshot+current_time.png)
     img_name = 'screenshot'+str(time.localtime())+'.png'
     myScreenshot.save(img_name)
     return img_name
+
+
+def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
+    #Parser of command line arguments
+    parser = argparse.ArgumentParser()
+    
+    #Initialization of needed arguments
+    parser.add_argument("-refresh", "-t", dest="refresh_time", help="Refreshing time of log info")
+    
+    #Parse command line arguments
+    args = parser.parse_args()
+    
+    #Check if the arguments have been specified on command line
+
+    return args.refresh_time
+
 
 def main():
     refresh_time = args_parser()
@@ -73,13 +105,22 @@ def main():
     if not refresh_time:
         refresh_time = '60'
 
+    #Read credentials from the user
     mail, password = credentials()
+    #Change working directory
     os.chdir(tempfile.gettempdir())
 
     while(True):
+        #Screenshot creation and storing it in 
+        #the temporary directory
         img_name = screenshot()
+        #Send an e-mail with the screenshot
         send_mail(mail, password, img_name)
+        #Remove screenshot image stored in the
+        #temporary directory
         os.remove(img_name)
+        #Wait refresh time seconds before taking
+        #another screenshot 
         time.sleep(int(refresh_time))
 
 if __name__=='__main__':

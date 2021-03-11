@@ -12,12 +12,12 @@ PORT = 80 #PORT for detection of packets (80 HTTP, 10000 HTTPS with SSLstrip)
 LINE = '____________________________________________________________'
 
 
-'''
-Process each packet on Network filter queue
-'''
 def process_packet(packet):
+    '''
+    Process each packet on Network filter queue
+    '''
+
     global PORT
-    
     #Evaluate IP packet filtered
     IP_pkt = IP(packet.get_payload())
     
@@ -69,11 +69,11 @@ def process_packet(packet):
     
     packet.accept()
 
-
-'''
-Injection of javascript code in HTML load
-'''
 def injection_code(load):
+    '''
+    Injection of javascript code in HTML load
+    '''
+
     global END_TAG, SCRIPT_TAG
 
     #If the HTML page has TAG, I'm going to replace it with javascript code
@@ -92,10 +92,11 @@ def injection_code(load):
     return load
 
 
-'''
-Parser of command line argument
-'''
 def args_parser():
+    '''
+    Parser of command line argument
+    '''
+
     global SCRIPT_TAG
     
     #Parser of command line arguments
@@ -121,10 +122,6 @@ def args_parser():
 
     return args.local, args.https
 
-
-'''
-Main function
-'''
 def main():
     global PORT
     local, https = args_parser()

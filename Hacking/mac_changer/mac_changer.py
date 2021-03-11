@@ -5,24 +5,25 @@ import argparse
 import re
 from termcolor import cprint
 
-'''
-No MAC address specified as command line argument
-'''
 class NoMACSpecified(Exception):
+    '''
+    No MAC address specified as command line argument
+    '''
+
     pass
 
-
-'''
-No network interface specified as command line argument
-'''
 class NoInterfaceSpecified(Exception):
+    '''
+    No network interface specified as command line argument
+    '''
+
     pass
 
-
-'''
-Change current MAC address of network interface with a new one
-'''
 def MAC_change(interface, new_MAC):
+    '''
+    Change current MAC address of network interface with a new one
+    '''
+
     #Disable the specified interface
     subprocess.call(["ifconfig", interface, "down"])
     
@@ -32,11 +33,27 @@ def MAC_change(interface, new_MAC):
     #Enable the spesified interface
     subprocess.call(["ifconfig", interface, "up"])
 
+def current_MAC(interface):
+    '''
+    Obtain current MAC address of interface
+    '''
 
-'''
-Parser of command line arguments
-'''
+    #Save current output of the program called
+    output = subprocess.check_output(["ifconfig", interface])
+    MAC = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w", str(output))
+    
+    #Check if MAC exists for this interface
+    if not MAC:
+        raise NoMACSpecified
+
+    return MAC.group(0)
+
+
 def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
     
@@ -55,25 +72,6 @@ def args_parser():
     
     return args.interface, args.mac
 
-
-'''
-Obtain current MAC address of interface
-'''
-def current_MAC(interface):
-    #Save current output of the program called
-    output = subprocess.check_output(["ifconfig", interface])
-    MAC = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w", str(output))
-    
-    #Check if MAC exists for this interface
-    if not MAC:
-        raise NoMACSpecified
-
-    return MAC.group(0)
-
-
-'''
-Main function
-'''
 def main():
     try:
         #Parser of command line arguments
@@ -103,7 +101,6 @@ def main():
     except NoMACSpecified:
         print("No OLD MAC address found")
         exit(0)
-
 
 if __name__=='__main__':
     main()

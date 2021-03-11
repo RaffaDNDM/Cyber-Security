@@ -5,21 +5,54 @@ from termcolor import cprint, colored
 import argparse
 
 def url_exist(url):
+    '''
+    Check if an URL exists by returning the 
+    resource obtain through the HTTP GET request.
+
+    Args:
+        url (str): URL to be checked.
+    
+    Returns:
+        result (str): Resource obtained at the 
+                      specified URL
+    '''
+
     try:
         return requests.get('http://'+url)
     except requests.exceptions.ConnectionError:
         pass
 
+
 def references_in_url(url):
+    '''
+    Find all the references in the analysed url.
+
+    Args:
+        url (str): URL of the resource in which I want 
+                   to find references.
+
+    Returns:
+        hrefs (list): List of all the references.
+    '''
+
     response = requests.get(url)
     return re.findall('(?:href=")(.*?)"', str(response.content))
 
+#List of all the urls found
 URL_LIST = []
 
 def crawler_ref(url):
+    '''
+    Find all the references between pages of the same site,
+    by looking to hrefs and trying to obtain the hidden ones.
+    '''
+    
     global URL_LIST
+
+    #List of all references found in the current page
     references = references_in_url(url)
     
+    #Recursively search of other references
     for ref in references:
         #Join a base URL and a possibly relative URL to
         #form an absolute interpretation of the latter.
@@ -37,11 +70,14 @@ def crawler_ref(url):
             #Recursion on url already discoverd
             crawler_ref(complete_url)
 
+
 def main():
+    #Parser of command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("url", help="Existing url (e.g. http://www.google.com)")
     args = parser.parse_args()
 
+    #Check if the URL specified exists
     if url_exist(args.url):
         cprint('Discovered URLs','blue')
         cprint('_____________________','blue')

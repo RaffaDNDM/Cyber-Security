@@ -2,6 +2,17 @@ import socket
 from termcolor import cprint
 
 def IP_from_host(remote_host):
+    '''
+    DNS resolution of the remote host.
+
+    Args:
+        remote_host (str): Remote host address
+
+    Returns:
+        ip_addr (str): IP address obtained from the DNS resolution
+                       of remote_host
+    '''
+
     try:
         ip_addr = socket.gethostbyname(remote_host)
     except socket.gaierror:

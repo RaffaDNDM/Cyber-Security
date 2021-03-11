@@ -14,16 +14,24 @@ import socket
 BROADCAST_MAC = 'ff:ff:ff:ff:ff:ff'
 IP_MASK = 0x80000000
 
-'''
-Error raised if the user doesn't specify a valid network IP address
-'''
 class NoNetworkSpecified(Exception):
+    '''
+    Error raised if the user doesn't specify a valid network IP address
+    '''
+
     pass
 
-'''
-Evaluate if network IP address is valid (x.x.x.x/n_netmask)
-'''
 def check_format_IP(network):
+    '''
+    Evaluate if network IP address is valid (x.x.x.x/n_netmask)
+
+    Args:
+        network (str): Network IP address to be evaluated
+
+    Returns:
+        network (str): Network IP address
+    '''
+
     #params[0]=IP 
     #params[1]=number of bits of netmask
     params = network.split('/')
@@ -51,36 +59,16 @@ def check_format_IP(network):
     print(f'{params[0]}', end='\n\n')
 
     return network
-        
 
-'''
-Parser of command line arguments
-'''
-def args_parser():
-    #Parser of command line arguments
-    parser = argparse.ArgumentParser()
-    #Initialization of needed arguments
-    parser.add_argument("-ip", "-net", dest="net", help="IP address of the network in format: x.x.x.x/netmask")
-    #Parse command line arguments
-    args = parser.parse_args()
-    
-    #Check if the arguments have been specified on command line
-    try:
-        if not args.net:
-            raise NoNetworkSpecified
-        
-        network=check_format_IP(args.net)
-    except NoNetworkSpecified:
-        parser.print_help()
-        exit(0)
-
-    return network
-
-
-'''
-Perform network scanning and print obtained info
-'''
 def network_scan(network):
+    '''
+    Detect the MAC addresses of all the devices connected in 
+    the local network, using ARP protocol, and display them.
+
+    Args:
+        network (str): Network IP address to be evaluated
+    '''
+
     #Create ARP request
     arp_head = ARP(pdst=network)
     ether_head = Ether(dst=BROADCAST_MAC)
@@ -110,9 +98,30 @@ def network_scan(network):
     cprint('|_________________|____________________|', 'red', end='\n\n')
 
 
-'''
-Main function
-'''
+def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
+    #Parser of command line arguments
+    parser = argparse.ArgumentParser()
+    #Initialization of needed arguments
+    parser.add_argument("-ip", "-net", dest="net", help="IP address of the network in format: x.x.x.x/netmask")
+    #Parse command line arguments
+    args = parser.parse_args()
+    
+    #Check if the arguments have been specified on command line
+    try:
+        if not args.net:
+            raise NoNetworkSpecified
+        
+        network=check_format_IP(args.net)
+    except NoNetworkSpecified:
+        parser.print_help()
+        exit(0)
+
+    return network
+
 def main():
     #Parser of command line arguments
     network = args_parser()    

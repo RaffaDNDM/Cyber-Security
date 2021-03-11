@@ -9,17 +9,18 @@ import os
 TARGET = get_if_addr(conf.iface) #IP of DEFAULT INTERFACE
 DOMAIN = 'www.google.com' #DEFAULT DOMAIN
 
-'''
-No correct format of IP address
-'''
 class NoIPFormat(Exception):
+    '''
+    No correct format of IP address
+    '''
+
     pass
 
-
-'''
-Check format of IP address specified
-'''
 def check_format_IP(IP_address):
+    '''
+    Check format of IP address specified
+    '''
+
     #params[0]=IP 
     #params[1]=number of bits of netmask   
     IP_numbers = IP_address.split('.')
@@ -35,11 +36,11 @@ def check_format_IP(IP_address):
 
     return IP_address
 
-
-'''
-Process each packet
-'''
 def process_packet(packet):
+    '''
+    Process each packet
+    '''
+
     global DOMAIN, TARGET
     IP_pkt = IP(packet.get_payload())
 
@@ -68,10 +69,11 @@ def process_packet(packet):
     packet.accept()
 
 
-'''
-Parser of command line argument
-'''
 def args_parser():
+    '''
+    Parser of command line argument
+    '''
+
     global TARGET, DOMAIN
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
@@ -105,10 +107,6 @@ def args_parser():
 
     return args.local
 
-
-'''
-Main function
-'''
 def main():
     #Parser of command line arguments
     local = args_parser()

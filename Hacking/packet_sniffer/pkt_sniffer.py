@@ -33,30 +33,31 @@ network_types = {ICMP_NUM:'ICMP header', TCP_NUM:'TCP header', UDP_NUM:'UDP head
 LINE = '____________________________________________'
 
 
-'''
-Obtain MAC address string from the number specified
-'''
 def get_MAC(addr):
+    '''
+    Obtain MAC address string from the number specified
+    '''
+
     #MAC address with dot format from array of char numbers
     #Convert each char number of addr into string
     #and then separate them with :
     return ':'.join(map(str, addr))
 
-
-'''
-Obtain MAC address string from the number specified
-'''
 def get_IP(addr):
+    '''
+    Obtain MAC address string from the number specified
+    '''
+
     #IP address with dot format from array of char numbers
     #Convert each char number of addr into string
     #and then separate them with :
     return '.'.join(map(str, addr))
 
-
-'''
-Ethernet decapsulation
-'''
 def eth_pkt(raw_data, verbose):
+    '''
+    Ethernet decapsulation
+    '''
+
     dst, src, protocol_type = unpack(ETH_FORMAT, raw_data[:14])
     
     #Source MAC address
@@ -77,11 +78,11 @@ def eth_pkt(raw_data, verbose):
 
     return src_MAC, dst_MAC, protocol_type, data
 
-
-'''
-ARP decapsulation
-'''
 def arp_pkt(raw_data, verbose):
+    '''
+    ARP decapsulation
+    '''
+
     hw_protocol, lv3_protocol, hw_len, lv3_len, op_code, src_hw_addr, src_lv3_addr, dst_hw_addr, dst_lv3_addr = unpack('! H H B B H 6s 4s 6s 4s', raw_data[:28])
     
     #Source address
@@ -119,11 +120,11 @@ def arp_pkt(raw_data, verbose):
 
     return op, src_MAC, dst_MAC, src_IP, dst_IP
 
-
-'''
-IPv4 decapsulation
-'''
 def ipv4_pkt(raw_data, verbose):
+    '''
+    IPv4 decapsulation
+    '''
+
     #! Network Byte Order = Big Endian Order
     vhl = raw_data[0]
     #Version of IP protocol
@@ -167,11 +168,11 @@ def ipv4_pkt(raw_data, verbose):
     
     return version, header_len, ttl, protocol, src_IP, dst_IP, data
 
-
-'''
-ICMP decapsulation
-'''
 def icmp_pkt(raw_data, verbose):
+    '''
+    ICMP decapsulation
+    '''
+
     type_list = ''
     
     #Open ICMP types packet
@@ -190,11 +191,11 @@ def icmp_pkt(raw_data, verbose):
     
     return type_list[1]
 
-
-'''
-TCP decapsulation
-'''
 def tcp_pkt(raw_data, verbose):
+    '''
+    TCP decapsulation
+    '''
+
     src_port, dst_port, seq, ack, off_res_flags = unpack(TCP_FORMAT, raw_data[:14])
     
     #Offset = number of words of 4 bytes
@@ -223,11 +224,11 @@ def tcp_pkt(raw_data, verbose):
     
     return src_port, dst_port, seq, ack, urg, ack, psh, rst, syn, fin, data
 
-
-'''
-UDP decapsulation
-'''
 def udp_pkt(raw_data, verbose):
+    '''
+    UDP decapsulation
+    '''
+
     src_port, dst_port, udp_len, checksum = unpack(UDP_FORMAT, raw_data[:8])
     
     if verbose:
@@ -243,11 +244,10 @@ def udp_pkt(raw_data, verbose):
     
     return src_port, dst_port, udp_len, checksum
 
-
-'''
-Print number of sniffed packets for each type of protocol
-'''
 def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num, udp_num, icmp_num, unkown_transport_num):
+    '''
+    Print number of sniffed packets for each type of protocol
+    '''
             
     subprocess.call('cls' if os.name=='nt' else 'clear')
     cprint('\n\nInterface:   ', 'yellow', attrs=['bold',], end='')
@@ -276,11 +276,11 @@ def print_state_pkt(interface, eth_num, ip_num, arp_num, unkown_net_num, tcp_num
     print(f'{unkown_transport_num}')
     cprint(LINE, COLOR_L4, attrs=['bold',], end='\n\n')
 
-
-'''
-Parser of command line arguments
-'''
 def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
     #Initialization of needed arguments
@@ -298,9 +298,6 @@ def args_parser():
     return args.interface, args.verbose
 
 
-'''
-Main function
-'''
 def main():
     ETH_P_ALL = 3
     sd = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_ALL))
@@ -314,7 +311,6 @@ def main():
     tcp_num = 0
     icmp_num = 0
     unkown_transport_num = 0
-
 
     if os.name == 'nt':
         sd.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)

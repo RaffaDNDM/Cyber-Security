@@ -5,6 +5,22 @@ import socket
 import utility
 
 class TCPScanner:
+    '''
+    Sequential TCP port scanner.
+
+    Args:
+        remote_host (str): Remote host to be solved and analysed
+
+    Attributes:
+        OPEN_PORTS (dict): Dictionary of open ports and related services
+
+        ip_address (str): IP address obtained from DNS resolution of remote
+                          host
+
+        TCP_ports (dict): Dictionary of known TCP ports and related services 
+                          to be analysed by the program
+    '''
+    
     OPEN_PORTS = {}
 
     def __init__(self, remote_host):
@@ -15,14 +31,21 @@ class TCPScanner:
             csv_reader = csv.reader(f, delimiter=',')
             self.TCP_ports = {int(row[0]):row[1] for row in csv_reader}
 
+
     def scan(self):        
+        '''
+        Scan all the known TCP ports.
+        '''
+        
         count = 0
         count_open = 0
 
         try:
+            #Scan sequentially all the known TCP ports
             for port in self.TCP_ports:
                 count += 1
 
+                #If the port is open, add it to the list of open ports
                 if self.is_open(port):
                     count_open += 1
                     self.OPEN_PORTS[port] = self.TCP_ports[port]
@@ -42,11 +65,27 @@ class TCPScanner:
 
         cprint('_________________________________________________\n', 'blue')
 
+
     def is_open(self, port):
+        '''
+        Scan a single TCP port.
+
+        Args:
+            port (int): TCP port to be scanned
+        
+        Returns:
+            state (bool): True if open port, False otherwise
+        '''
+
+        #Create TCP socket
         sd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #Set timeout
         sd.settimeout(1.0)
+        #Test if port is open
         state = sd.connect_ex((self.ip_address, port))
+        #Close the TCP socket
         sd.close()
+        
         return state==0
 
 def main():

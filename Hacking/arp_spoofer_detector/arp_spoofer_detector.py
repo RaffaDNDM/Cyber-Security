@@ -2,10 +2,11 @@ from scapy.layers.l2 import ARP, Ether, sniff
 from termcolor import cprint
 from scapy.config import conf
 
-'''
-Evaluate MAC address of a specific IP
-'''
 def get_MAC(ip):
+    '''
+    Evaluate MAC address of a specific IP
+    '''
+
     #ARP request of resolution of IP address ip
     arp_header = ARP(pdst=ip) 
     
@@ -27,18 +28,18 @@ def get_MAC(ip):
     #first_element[1] = response to request
     return response_list[0][1].hwsrc
 
-
-'''
-Detect ARP spoofing
-'''
 def detect_spoofer(interface):
+    '''
+    Detect ARP spoofing
+    '''
+
     sniff(iface=interface, store=False, prn=check_pkt)
 
-
-'''
-Check if an ARP packet has correct MAC address
-'''
 def check_pkt(packet):
+    '''
+    Check if an ARP packet has correct MAC address
+    '''
+
     #ARP Response
     if packet.haslayer(ARP) and packet[ARP].op == 2:
         
@@ -57,9 +58,6 @@ def check_pkt(packet):
             pass
 
 
-'''
-Main function
-'''
 def main():
     detect_spoofer(conf.iface)
 

