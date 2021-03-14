@@ -106,6 +106,10 @@ class Blockchain:
         self.first_block()
 
     def first_block(self):
+        '''
+        Create the first genesis block and add it to the blockchain.
+        '''
+
         #Create prev_hash of the first block as a random 64 hexadecimal characters
         hex_chars = '0123456789abcdef'
         prev_hash = ''.join([random.choice(hex_chars) for _ in range(64)])
@@ -115,11 +119,23 @@ class Blockchain:
         self.BLOCKCHAIN_LIST.append(Block(prev_hash, transactions))
 
     def add_block(self, transactions: list):
+        '''
+        Create the block with specified transactions 
+        and add it to the blockchain.
+
+        Args:
+            transactions (list): List of Transaction objects
+        '''
+
         prev_hash = self.BLOCKCHAIN_LIST[-1].compute_hash()
         b = Block(prev_hash, transactions)
         self.BLOCKCHAIN_LIST.append(b)
 
     def info(self):
+        '''
+        Print the content of the blockchain.
+        '''
+
         cprint('\nBlockchain information', 'blue')
         cprint('___________________________________________________________', 'blue')
         
@@ -151,17 +167,21 @@ class Blockchain:
 
 
 def main():
+    #Colored text
     colorama.init()
+    #Create the blockchain
     chain = Blockchain()
     run_check = True
 
+    #Read input transactions of the user
     while run_check:
         cprint('Insert the transaction you want to register', 'blue')
         cprint('(Q to exit and END to submit the transactions in a block):', 'blue')
         cprint('___________________________________________________________', 'blue')
         cprint('Example format: Alice -> Bob : 10.0', 'blue', end='\n\n')
-        transactions = []
 
+        #Transactions to be inserted in a block
+        transactions = []
         submit_check = True
 
         while submit_check:
@@ -169,20 +189,29 @@ def main():
             t = input()
 
             if t.lower() == 'end':
+                #Upload all the last input transictions into a block
                 submit_check = False
             elif t.lower() == 'q':
+                #Upload all the last input transictions into a block
+                #and terminate the program
                 submit_check = False
                 run_check = False
             else:
+                #Sender of the money
                 src, t2 = t.split(' -> ')
+                #Receiver of the specified amount of money
                 dst, amount = t2.split(' : ')
+                #Add the transaction to the list of transactions
+                #that will be uploaded into the block
                 transactions.append(Transaction(src, dst, float(amount)))
 
         cprint('___________________________________________________________', 'blue')
 
         if transactions:
+            #Create a new block and add it to the blockchain
             chain.add_block(transactions)
     
+    #Display the content of the blockchain
     chain.info()
     print('Exit from the program...', end='\n\n')
 
